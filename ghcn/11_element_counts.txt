@@ -1,0 +1,76 @@
+
+lemley=# select element_description, count(*) as observation_count, count(distinct station_code) as station_count from ghcn group by 1 order by 2 desc; 
+                                                                        element_description                                                                        | observation_count | station_count 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+---------------
+ Precipitation (tenths of mm)                                                                                                                                      |          10083964 |         36507
+ Minimum temperature (tenths of degrees C)                                                                                                                         |           4547274 |         13957
+ Maximum temperature (tenths of degrees C)                                                                                                                         |           4515656 |         13919
+ Snowfall (mm)                                                                                                                                                     |           4452165 |         22036
+ Snow depth (mm)                                                                                                                                                   |           3275860 |         18587
+ Average temperature (tenths of degrees C) [Note that TAVG from source _S_ corresponds to an average for the period ending at 2400 UTC rather than local midnight] |           2471033 |          6805
+ Temperature at the time of observation (tenths of degrees C)                                                                                                      |           1924644 |          5734
+ Water equivalent of snow on the ground (tenths of mm)                                                                                                             |            493371 |          5972
+ Average daily wind speed (tenths of meters per second)                                                                                                            |            385257 |          1030
+ Fastest 2-minute wind speed (tenths of meters per second)                                                                                                         |            359463 |           936
+ Direction of fastest 2-minute wind (degrees)                                                                                                                      |            359399 |           936
+ Fastest 5-second wind speed (tenths of meters per second)                                                                                                         |            356473 |           937
+ Direction of fastest 5-second wind (degrees)                                                                                                                      |            356401 |           937
+ Water equivalent of snowfall (tenths of mm)                                                                                                                       |            230555 |          5993
+ Peak gust wind speed (tenths of meters per second)                                                                                                                |            226132 |           715
+ Direction of peak wind gust (degrees)                                                                                                                             |            222473 |           702
+ Weather Type: Fog, ice fog, or freezing fog (may include heavy fog)                                                                                               |            145042 |          3167
+ Peak gust time (hours and minutes, i.e., HHMM)                                                                                                                    |            110762 |           907
+ Weather Type: Thunder                                                                                                                                             |             62070 |          2848
+ Maximum soil temperature (tenths of degrees C) for cover bare ground soil depth 10 cm                                                                             |             53611 |           172
+ Minimum soil temperature (tenths of degrees C) for cover bare ground soil depth 10 cm                                                                             |             53188 |           170
+ Evaporation of water from evaporation pan (tenths of mm)                                                                                                          |             50442 |           243
+ 24-hour wind movement (km)                                                                                                                                        |             37006 |           165
+ Weather Type: Smoke or haze                                                                                                                                       |             33392 |           828
+ Number of days included in the multiday precipiation total (MDPR)                                                                                                 |             26410 |          3232
+ Multiday precipitation total (tenths of mm; use with DAPR and DWPR, if available)                                                                                 |             26371 |          3232
+ Daily maximum temperature of water in an evaporation pan (tenths of degrees C)                                                                                    |             23440 |           125
+ Daily minimum temperature of water in an evaporation pan (tenths of degrees C)                                                                                    |             23191 |           123
+ Maximum soil temperature (tenths of degrees C) for cover sod soil depth 10 cm                                                                                     |             21996 |            76
+ Minimum soil temperature (tenths of degrees C) for cover sod soil depth 10 cm                                                                                     |             21673 |            75
+ Weather Type: Heavy fog or heaving freezing fog (not always distinquished from fog)                                                                               |             17646 |           767
+ Highest instantaneous wind speed (tenths of meters per second)                                                                                                    |             12389 |            47
+ Average daily wind direction (degrees)                                                                                                                            |             11975 |            45
+ Number of days with non-zero precipitation included in multiday precipitation total (MDPR)                                                                        |              7819 |           982
+ Minimum soil temperature (tenths of degrees C) for cover bare ground soil depth 5 cm                                                                              |              7291 |            24
+ Maximum soil temperature (tenths of degrees C) for cover bare ground soil depth 5 cm                                                                              |              7286 |            24
+ Maximum soil temperature (tenths of degrees C) for cover bare ground soil depth 20 cm                                                                             |              5339 |            18
+ Minimum soil temperature (tenths of degrees C) for cover bare ground soil depth 20 cm                                                                             |              5252 |            17
+ Weather Type: High or damaging winds                                                                                                                              |              4232 |          1180
+ Weather Type: Glaze or rime                                                                                                                                       |              4146 |          1274
+ Weather Type: Hail (may include small hail)                                                                                                                       |              2992 |          1430
+ Multiday minimum temperature (tenths of degrees C; use with DATN)                                                                                                 |              2908 |           186
+ Number of days included in the multiday minimum temperature (MDTN)                                                                                                |              2908 |           186
+ Number of days included in the multiday maximum temperature (MDTX)                                                                                                |              2809 |           179
+ Multiday maximum temperature (tenths of degress C; use with DATX)                                                                                                 |              2809 |           179
+ Weather Type: Ice pellets, sleet, snow pellets, or small hail                                                                                                     |              2664 |          1129
+ Minimum soil temperature (tenths of degrees C) for cover sod soil depth 5 cm                                                                                      |              2264 |             8
+ Maximum soil temperature (tenths of degrees C) for cover sod soil depth 5 cm                                                                                      |              2261 |             8
+ Maximum soil temperature (tenths of degrees C) for cover sod soil depth 20 cm                                                                                     |              2176 |             7
+ Minimum soil temperature (tenths of degrees C) for cover sod soil depth 20 cm                                                                                     |              2176 |             7
+ Maximum soil temperature (tenths of degrees C) for cover bare ground soil depth 100 cm                                                                            |              1795 |             7
+ Daily total sunshine (minutes)                                                                                                                                    |              1437 |            50
+ Daily percent of possible sunshine (percent)                                                                                                                      |              1432 |            48
+ Minimum soil temperature (tenths of degrees C) for cover bare ground soil depth 100 cm                                                                            |              1370 |             5
+ Maximum soil temperature (tenths of degrees C) for cover bare ground soil depth 150 cm                                                                            |              1109 |             4
+ Minimum soil temperature (tenths of degrees C) for cover sod soil depth 100 cm                                                                                    |              1045 |             4
+ Maximum soil temperature (tenths of degrees C) for cover sod soil depth 100 cm                                                                                    |              1045 |             4
+ Thickness of ice on water (tenths of mm)                                                                                                                          |               856 |             8
+ Weather Type: Blowing or drifting snow                                                                                                                            |               818 |           219
+ Minimum soil temperature (tenths of degrees C) for cover bare ground soil depth 150 cm                                                                            |               684 |             2
+ Maximum soil temperature (tenths of degrees C) for cover sod soil depth 150 cm                                                                                    |               329 |             1
+ Minimum soil temperature (tenths of degrees C) for cover sod soil depth 150 cm                                                                                    |               329 |             1
+ Weather Type: Dust, volcanic ash, blowing dust, blowing sand, or blowing obstruction                                                                              |               116 |            35
+ Weather Type: Tornado, waterspout, or funnel cloud                                                                                                                |                32 |            28
+ Weather Type: Freezing rain                                                                                                                                       |                 4 |             3
+ Multiday snowfall total                                                                                                                                           |                 3 |             3
+ Number of days included in the multiday snowfall total (MDSF)                                                                                                     |                 3 |             3
+ Weather Type: Ice fog or freezing fog                                                                                                                             |                 1 |             1
+ Weather Type: Freezing drizzle                                                                                                                                    |                 1 |             1
+ Weather Type: Snow, snow pellets, snow grains, or ice crystals                                                                                                    |                 1 |             1
+(70 rows)
+

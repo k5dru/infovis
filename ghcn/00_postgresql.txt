@@ -1,0 +1,6 @@
+sudo apt-get install postgresql
+sudo su - postgres
+createuser --interactive
+	Enter name of role to add: lemley
+	Shall the new role be a superuser? (y/n) y
+createdb lemley
