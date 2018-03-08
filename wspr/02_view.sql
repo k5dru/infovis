@@ -30,10 +30,16 @@ end as rx_longitude
 ,power_dbm as tx_dbm
 ,snr as rx_snr
 ,frequency 
---,drift 
+,drift 
 -- band 
 --,version  
 -- code 
+,round(distance_km::decimal * ((snr + 36)::decimal / (power_dbm + 3)),1) as quality
+,case 
+when distance_km::decimal * ((snr + 36)::decimal / (power_dbm + 3)) > 1168 then 1
+when distance_km::decimal * ((snr + 36)::decimal / (power_dbm + 3)) > 668 then 2
+when distance_km::decimal * ((snr + 36)::decimal / (power_dbm + 3)) > 367 then 3
+else 4 end as quality_quartile
 from wspr_stage w;
 
 select * from ( 
