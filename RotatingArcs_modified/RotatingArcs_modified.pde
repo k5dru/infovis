@@ -26,9 +26,13 @@ float prevMouseX = 0, prevMouseY = 0;
  
 float earthRadius = 6371.0; /* km */ 
 float kmPerPixel = 20; 
- 
-void setup() {
+
+void settings()
+{ 
   size(1280, 900, P3D);
+}
+
+void setup() {
   background(255);
   
   // Fill the tables
@@ -126,9 +130,9 @@ int earthArcLevel = 0;
 
 void earthArc(float latitude1, float longitude1, float altitude1, float latitude2, float longitude2, float altitude2)
 {
-  /* THIS IS BROKEN in many ways (but is working for a proof-of-concept 
-  Need to find the great circle midpoint instead of the rectangular midpoint 
-  Needs to cross the -179 to 1 longitude path the short way 
+  /* THIS IS BROKEN in many ways (but is working for a proof-of-concept)
+  FIXED? Need to find the great circle midpoint instead of the rectangular midpoint 
+  FIXED? Need to cross the -179 to 1 longitude path the short way 
   FIXED: The lines are drawn crooked but it still looks pretty cool
   FIXED: Altitude 2 is not considered
   Could use the cosine lookup table 
@@ -140,42 +144,65 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
   float midalt = (altitude2 + altitude1) / 2.0;
 
   /* from https://www.movable-type.co.uk/scripts/latlong.html : 
-  phi/lambda for lati­tude/longi­tude in radian  */
-  double phi1 = radians(latitude1);
-  double phi2 = radians(latitude2);
-  double lambda1 = radians(longitude1);
-  double lambda2 = radians(longitude2);
+  lat_rad/lon_rad for lati­tude/longi­tude in radian  */
+  double lat_rad1 = radians(latitude1);
+  double lat_rad2 = radians(latitude2);
+  double lon_rad1 = radians(longitude1);
+  double lon_rad2 = radians(longitude2);
 /*
-  if (phi1 == (double)0.00) phi1 = 0.00000001;   
-  if (phi2 == (double)0.00 ) phi2 = 0.00000001; 
-  if (lambda1 == (double)0.00) lambda1 = 0.00000001; 
-  if (lambda2 == (double) 0.00) lambda2 = 0.00000001; 
+  if (lat_rad1 == (double)0.00) lat_rad1 = 0.00000001;   
+  if (lat_rad2 == (double)0.00 ) lat_rad2 = 0.00000001; 
+  if (lon_rad1 == (double)0.00) lon_rad1 = 0.00000001; 
+  if (lon_rad2 == (double) 0.00) lon_rad2 = 0.00000001; 
 */
-  double Bx = Math.cos(phi2) * Math.cos(lambda2-lambda1);
-  double By = Math.cos(phi2) * Math.sin(lambda2-lambda1);
+  double Bx = Math.cos(lat_rad2) * Math.cos(lon_rad2-lon_rad1);
+  double By = Math.cos(lat_rad2) * Math.sin(lon_rad2-lon_rad1);
 /*
   if (Bx < (double)0.0000001) Bx = 0.0000001; // this fixes the grid lines going out into space... 
   if (By < (double)0.0000001) By = 0.0000001; 
   if (Bx > (double)PI * 2 - 0.0000001) Bx -= 0.0000001; // this fixes the grid lines going out into space... 
   if (By > (double)PI * 2 - 0.0000001) By -= 0.0000001; 
 */
-  double phi3 = Math.atan2(Math.sin(phi1) + Math.sin(phi2), Math.sqrt( (Math.cos(phi1)+Bx)*(Math.cos(phi1)+Bx) + By*By ) );
-  double lambda3 = lambda1 + Math.atan2(By, Math.cos(phi1) + Bx);
+  double lat_rad3 = Math.atan2(Math.sin(lat_rad1) + Math.sin(lat_rad2), Math.sqrt( (Math.cos(lat_rad1)+Bx)*(Math.cos(lat_rad1)+Bx) + By*By ) );
+  double lon_rad3 = lon_rad1 + Math.atan2(By, Math.cos(lat_rad1) + Bx);
+
+  /*
+   while (lat_rad3 > (2 * PI)) lat_rad3 -= (2 * PI);
+  while (lon_rad3 > (2 * PI)) lon_rad3 -= (2 * PI);
+  while (lat_rad3 < 0) lat_rad3 += (2 * PI);
+  while (lon_rad3 < 0) lon_rad3 += (2 * PI);
+*/  
 /*
-  if (phi3 == (double)0.00) phi3 = 0.000000001; 
-  if (lambda3 == (double)0.00) lambda3 = 0.000000001; 
+  if (lat_rad3 == (double)0.00) lat_rad3 = 0.000000001; 
+  if (lon_rad3 == (double)0.00) lon_rad3 = 0.000000001; 
 */
  
-  midlat=degrees((float)phi3); 
-  midlon=degrees((float)lambda3);
-
+  midlat=degrees((float)lat_rad3); 
+  midlon=degrees((float)lon_rad3);
+  while (midlon <= -180) midlon += 360; 
+  while (midlon > 180) midlon -= 360;  
+  
+  
  /* TODO: change to haversine distance */ 
-  if (  (abs(latitude2 - latitude1) < 5 && abs(longitude2 - longitude1) < 5) ||  earthArcLevel > 12 /* avoid runaway */)
+  
+  if (  (
+    abs(latitude2 - latitude1) < 3 
+    && 
+    (  
+      abs(longitude2 - longitude1) < 3
+      || abs((longitude2 + 360) - longitude1) < 3  /* this is not working :( */
+      || abs(longitude2 - (longitude1 + 360)) < 3
+    )
+    ) ||  earthArcLevel > 7 /* avoid runaway */)
   {
+    /* don't draw a line across the international date line, because it's just not working. :( */ 
+    if (longitude2 > 170 && longitude1 < -170) return;
+    if (longitude1 > 170 && longitude2 < -170) return;
+    
     /* if the points are close in space, just draw a line, because the Earth is flat a short-range. */ 
     pushMatrix(); 
-    rotateY( (float) lambda3 ); /* must do Y axis first, longitude  */  
-    rotateX( (float) phi3 );    /* latitude */
+    rotateY( (float) lon_rad3 ); /* must do Y axis first, longitude  */  
+    rotateX( (float) lat_rad3 );    /* latitude */
     translate(0, 0, ((earthRadius + midalt)/ kmPerPixel)); /* translate Z axis */
     
  /*   line(
@@ -191,7 +218,9 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
     0, 0, 0); /* x1, y1, z1, x2, y2, z2 */
     
     float km_per_degree_latitude = 111.0 * ((earthRadius + midalt) / earthRadius);
-    float km_per_degree_longitude = 111.0 * ((earthRadius + midalt) / earthRadius) * (float) Math.cos(phi3);
+    float km_per_degree_longitude = 111.0 * ((earthRadius + midalt) / earthRadius) * (float) Math.cos(lat_rad3);
+    
+    /* stroke(random(255)); */
     
     line(
       (longitude1 - midlon) * km_per_degree_longitude / kmPerPixel, 
@@ -281,15 +310,16 @@ void draw() {
   */ 
    
   /* do the same thing with earthArc */   
-  /* mark the latitude lines */
+  /* mark the latitude lines 
+  */
   for (int lat = -80; lat <= 80; lat += 10)
     for (int lon = -180; lon < 180; lon += 10)  
       earthArc(lat, lon, 0, lat, lon+10, 0); 
   
-  /* mark the maridians  */
-    for (int lon = -170; lon <= 180; lon += 10)  
+  /* mark the maridians  
+*/  
+     for (int lon = -170; lon <= 180; lon += 10)  
       earthArc(-90, lon, 0, 90, lon, 0); 
-  
   
   /* mark a bunch more random points, to see how Processing.org handles the load 
  for (int i = 0; i <= 10000; i += 1) { 
@@ -297,23 +327,24 @@ void draw() {
   }
   */
   
-  /* mark my house */ 
+  /* mark my house 
   stroke(255,255,255);
   earthPoint(35.0, -92.4321, 1000);
   earthPoint(45, -12, 1000); 
-  
-  /* draw some difficult arcs from my house */
+   */
+  /* draw some difficult arcs from my house 
   earthArc(35.0, -92.4321, 1150, 45, -12, 0);
   earthArc(35.0, -92.4321, 1300, -30, -160, 0);
   earthArc(35.0, -92.4321, 1450, 22, 18, 0);
   earthArc(35.0, -92.4321, 1600, 66, -170, 0);
   earthArc(35.0, -92.4321, 1750, -90, 130, 0);
-
-  /* mark a bunch of random scribbles  */
-  
- for (int i = 0; i <= 10; i += 1) { 
-      earthArc(random(179.0) - 90, random(359.0) - 180, random(25)+25 
-              ,random(179.0) - 90, random(359.0) - 180, random(25)+25); 
+*/
+ /* mark a bunch of random scribbles  */
+ randomSeed(40);
+ for (int i = 0; i <= 100; i += 1) { 
+     stroke(random(255), random(255), random(255));
+      earthArc(random(179.0) - 90, random(359.0) - 180, random(2500)+25 
+              ,random(179.0) - 90, random(359.0) - 180, random(2500)+25); 
   }
   /* end lemley */
 
