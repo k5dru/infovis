@@ -79,7 +79,8 @@ void loadMarks(int age_in_minutes) {
 +"  where observationtime between "
 +"    (select min(observationtime) from wspr) + interval '" + (age_in_minutes - 5)+ " minutes'"  
 +"    and        "
-+"    (select min(observationtime) from wspr) + interval '" + age_in_minutes + " minutes'"  
++"    (select min(observationtime) from wspr) + interval '" + age_in_minutes + " minutes'"
++"  and quality_quartile = 4    "
 +"  limit 10000           "
   );
      
@@ -269,6 +270,15 @@ void drawGlobe()
   
 }
 
+void drawText() 
+{ 
+  pushMatrix();  
+  
+  
+  popMatrix();
+  return;
+}
+
 void earthPoint(float latitude, float longitude, float altitude)
 { 
   /* challenge:  Draw something at a particular latitude, longitude, and altitude in km. */
@@ -410,14 +420,15 @@ void draw() {
   /* save where mouse was, for next time through */
   prevMouseX = mouseX;
   prevMouseY = mouseY;
-
+  
   /* if there was a mousewheel event, scale */
 
 
   translate(width/2, height/2, 0);  /* aha! This makes our drawing coordiate system zero-in-the-middle ! */
-  rotateX(viewpointX); 
+  rotateX(viewpointX);
   rotateY(viewpointY);
-  // rotateZ(23.4  *  0.01745329252); /* earth is tilted 23 degrees */
+  viewpointY += 0.01;
+  //rotateZ(radians(23.4)); /* earth is tilted 23 degrees */
   drawGlobe();
   
 
@@ -432,7 +443,7 @@ void draw() {
   // This is because we are deleting elements from the list  
 
 
-  for (int i = marks.size()-1; i >= 0; i--) { 
+  for (int i = 0; i < marks.size(); i++) { 
     // An ArrayList doesn't know what it is storing so we have to cast the object coming out
     Mark mark = marks.get(i);
     mark.display();
