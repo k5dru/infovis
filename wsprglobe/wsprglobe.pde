@@ -7,17 +7,18 @@ float prevMouseX = 0, prevMouseY = 0;
 
 float earthRadius = 6371.0; /* km */
 
-float kmPerPixel = 20; /* 15 is realistic minium, 30 is realistic maximum */  
+float kmPerPixel = 20 ; /* 15 is realistic minium, 30 is realistic maximum */  
 
 JSONObject json_coastline;
+
 
 /* database connection: */
 import de.bezier.data.sql.*;    
 PostgreSQL pgsql;
-
 void settings()
 { 
   size(1280, 900, P3D);
+  
 }
 
 /* https://processing.org/examples/arraylistclass.html */
@@ -67,19 +68,18 @@ class Mark {
 
 ArrayList<Mark> marks;
 
-void loadMarks(int age_in_minutes) {
-  
-  print("### entering loadMarks("+age_in_minutes+") ... "); 
+void loadMarks(Date beginDate, Date endDate) {
+  int startMillis = millis(); 
+  print("### entering loadMarks("+ dateFormat.format(beginDate) + ","+ dateFormat.format(endDate) +") ... "); 
   marks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
+
   pgsql.query(""
 +"  select tx_latitude, tx_longitude, rx_latitude "
 +" , rx_longitude, distance_km, quality_quartile, drift  "
-+" , extract(MINUTES from ((select min(observationtime) from wspr) + interval '"+age_in_minutes+" minutes') - observationtime) as observation_age"
++" , extract(MINUTES from ('" + dateFormat.format(endDate) + "'::timestamp - observationtime)) as observation_age"
 +"  from wspr       "
-+"  where observationtime between "
-+"    (select min(observationtime) from wspr) + interval '" + (age_in_minutes - 5)+ " minutes'"  
-+"    and        "
-+"    (select min(observationtime) from wspr) + interval '" + age_in_minutes + " minutes'"
++"  where observationtime between '" + dateFormat.format(beginDate) + "'::timestamp"
++"                            and '" + dateFormat.format(endDate) + "'::timestamp"
 +"  and quality_quartile = 4    "
 +"  limit 10000           "
   );
@@ -102,14 +102,38 @@ void loadMarks(int age_in_minutes) {
       )
     );
   }
-  
-  println (marks.size() + " marks loaded"); 
+    
+  println (marks.size() + " marks loaded in " + (millis() - startMillis) + " ms"); 
    
 }
 
 
+/* for SimpleDateFormat, from http://www.java2s.com/Tutorial/Java/0040__Data-Type/SimpleDateFormat.htm */
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.text.ParseException;
+
+import java.util.TimeZone;  // from https://beginnersbook.com/2013/05/java-date-timezone/
+
+Date beginDate;
+Date endDate;
+SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+
+
+
 void setup() {
   background(255);
+
+  /* try to shift to using an actual date instead of minutes-since-december-1 */
+  try {
+    beginDate = dateFormat.parse("2017-12-01 00:00:00 -0000");
+    println(beginDate);
+    println(dateFormat.format(beginDate));
+    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );  /* time is in milliseconds */ 
+    println(dateFormat.format(endDate));
+  } catch (ParseException e) {
+    e.printStackTrace();
+  }
 
   /* thanks to  fjenett 20081129 */
   /* make database connection */
@@ -160,8 +184,6 @@ void setup() {
     // yay, connection failed !
     println ("postgresql connection failed.");
   }
-
-  loadMarks(0);
 
   // load JSON coastline, converted from ne_10m_admin_0_boundary_lines_land with https://geoconverter.hsr.ch/
   // bah, that's not the right one. 
@@ -219,12 +241,56 @@ void drawGlobe()
   /* The ionosphere is a shell of electrons and electrically charged atoms and molecules that surrounds the Earth, 
    stretching from a height of about 50 km (31 mi) to more than 1,000 km (620 mi).
    The F layer is about 300km in altitude */
-  lights(); 
-  //stroke(0, 0, 255, 80);
+//  lights(); 
+  
+  pushMatrix(); 
+  
+  /* locate the point on the Earth where the Sun would be straight up. */ 
+  /* which would be local noon. */
+
+  /* okay.   
+    Formulas to rotate the globe under the sun point, given the UTC time.
+    I sussed these out with a calculator.  They are probably crap, but they work.
+    James  */
+  SimpleDateFormat currentFormat = new SimpleDateFormat("D");
+  currentFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+  int utc_dayofyear = Integer.parseInt(currentFormat.format(endDate));
+  
+  currentFormat = new SimpleDateFormat("HH");
+  currentFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+  int utc_hours = Integer.parseInt(currentFormat.format(endDate));
+  
+  currentFormat = new SimpleDateFormat("mm");
+  currentFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+  int utc_minutes = Integer.parseInt(currentFormat.format(endDate));
+
+  //println(utc_dayofyear + " | " + utc_hours + " | " + utc_minutes);
+  
+  rotateY( (PI) + ((1 - ((utc_hours * 60.0 + utc_minutes)/1440.0) ) * PI * 2 )); /* must do Y axis first  */
+
+  rotateX( radians(cos( (2 * PI * (utc_dayofyear)/365.0) + (2 * PI * 9/365.0) ) * -23.5) ); 
+  
+  translate(0, 0, ((earthRadius + 100) / kmPerPixel)); /* translate Z axis */
+  
+  /* plop a pseudo-sun above the earth */
+  
   noStroke();
+  fill(128, 128, 0);
+  sphereDetail(7); /* number? amount? of tessellated triangles */
+  sphere(5);
+  
+  /* the sun is 149.6 million km from the earth; set light point appropriately far */
+  translate(0, 0, ((149.6 * 1000000) / kmPerPixel)); /* translate Z axis */
+
   /* fill(10, 10, 120); 10, 10, 120 is my guess of earth blue, or my guess at it at least */
   fill(10, 10, 64); 
+  fill(32, 32, 128);
   //  noFill();
+
+  pointLight(255, 255, 255, 0, 0, 0);
+  popMatrix(); 
+  
+  //stroke(0, 0, 255, 80);
   sphereDetail(90); /* number? amount? of tessellated triangles */
 
   // sphere(height / 2 * 0.40);
@@ -329,7 +395,6 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
   double lat_rad3 = Math.atan2(Math.sin(lat_rad1) + Math.sin(lat_rad2), Math.sqrt( (Math.cos(lat_rad1)+Bx)*(Math.cos(lat_rad1)+Bx) + By*By ) );
   double lon_rad3 = lon_rad1 + Math.atan2(By, Math.cos(lat_rad1) + Bx);
 
-
   midlat=degrees((float)lat_rad3); 
   midlon=degrees((float)lon_rad3);
 
@@ -392,8 +457,8 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
   }
 }
 
-int age_in_minutes = 0;
 int last_load_millis = 0;
+int last_spin_millis = 0; 
 
 void draw() {
   background(0);
@@ -422,19 +487,65 @@ void draw() {
   prevMouseY = mouseY;
   
   /* if there was a mousewheel event, scale */
+/* default: 
+  camera(width/2.0,    //eyeX,
+    height/2.0,        //eyeY,
+    (height/2.0) / tan(PI*30.0 / 180.0), // eyeZ,
+    width/2.0,         //centerX,
+    height/2.0,        //centerY,
+    0,                 //centerZ, 
+    0,                 //upX, 
+    1,                 // upY,
+    0                  // upZ
+    );
+  */   
 
+/* do any text processing before rotating the world. */
+  fill (255, 192, 0);  /* like old amber screens */ 
+  
+  int textY = 0; 
+  int textYInc = 15; 
+  
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Pacific/Midway"));
+  text(dateFormat.format(endDate) + " - Pacific/Midway", 20, (textY += textYInc));
 
-  translate(width/2, height/2, 0);  /* aha! This makes our drawing coordiate system zero-in-the-middle ! */
+  dateFormat.setTimeZone(TimeZone.getTimeZone("America/Chicago"));
+  text(dateFormat.format(endDate) + " - America/Chicago", 20, (textY += textYInc));
+
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Luxembourg"));
+  text(dateFormat.format(endDate) + " - Europe/Luxembourg", 20, (textY += textYInc));
+    
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
+  text(dateFormat.format(endDate) + " - Asia/Tokyo", 20, (textY += textYInc));
+  
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Australia/Sydney"));
+  text(dateFormat.format(endDate) + " - Australia/Sydney", 20, (textY += textYInc) );
+
+  dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+     
+  translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);
   rotateY(viewpointY);
-  viewpointY += 0.01;
-  //rotateZ(radians(23.4)); /* earth is tilted 23 degrees */
+  /*
+  viewpointY += ((millis() - last_spin_millis) / 30000.0); 
+  last_spin_millis = millis(); 
+  //0.01; 
+   */
+   
+  // set sun position based on time.  What time is it anyway? 
+  
+  
+  //rotateZ(radians(23.4)); //earth is tilted 23 degrees 
   drawGlobe();
   
 
   if (millis() > (last_load_millis + 100)) {
     last_load_millis = millis(); 
-    loadMarks(age_in_minutes += 2); // WSPR data is updated every 2 minutes per protocol. 
+ 
+    beginDate = new Date(beginDate.getTime() + 2 * (1000 * 60) );  // Java time is in milliseconds  
+    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );   
+
+    loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
   }
 
   // With an array, we say balls.length, with an ArrayList, we say balls.size()
@@ -448,4 +559,6 @@ void draw() {
     Mark mark = marks.get(i);
     mark.display();
   }
+ 
+  if (frameCount % 10 == 0) println(frameRate + " FPS"); 
 }
