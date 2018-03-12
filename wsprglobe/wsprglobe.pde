@@ -273,7 +273,13 @@ void drawGlobe()
   /* Say, while I am here, can I put a circle around the world to indicate the grey line? */ 
   stroke(128,128,128);
   fill(128,128,128);
+  //noFill();
   ellipseMode(CENTER);
+  translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+  ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+  translate(0, 0, (+100 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+  ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+  translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
   ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
   
   translate(0, 0, ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
@@ -281,12 +287,22 @@ void drawGlobe()
 //  sphereDetail(7); /* number? amount? of tessellated triangles */
 //  sphere(5);
   noStroke();
+  fill(128,128,128);
   ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+
+  fill (255, 192, 0);  /* like old amber screens */ 
+  text("Test",(200 / kmPerPixel), (200 / kmPerPixel));
+
 
 // OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
   translate(0, 0, -2 * ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
   ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
 
+/* can I overwite with a transparant one to make it a little moon? 
+  fill(128,128,128, 0);
+  ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+  no, I can't. the other one just shows under it. 
+*/
 
   
   /* the sun is 149.6 million km from the earth; set light point appropriately far */
@@ -537,11 +553,9 @@ void draw() {
   translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);
   rotateY(viewpointY);
-  /*
   viewpointY += ((millis() - last_spin_millis) / 30000.0); 
   last_spin_millis = millis(); 
   //0.01; 
-   */
    
   // set sun position based on time.  What time is it anyway? 
   
