@@ -32,8 +32,7 @@ class Mark {
   float alt2; 
   int quality_quartile;
   int drift;
-  int observation_age;
-  int alpha;
+  int observation_age;  int alpha;
 
   Mark(float a, float b, float c, float d, float e, float f, int g, int h, int i) { 
     lat1=a;
@@ -245,7 +244,8 @@ void drawGlobe()
   
   pushMatrix(); 
   
-  /* locate the point on the Earth where the Sun would be straight up. */ 
+  /* NEW:  based on the timestamp endDate, which is the window end for the most recent observation, 
+     locate the point on the Earth where the Sun would be straight up and put a mark there. */ 
   /* which would be local noon. */
 
   /* okay.   
@@ -270,14 +270,24 @@ void drawGlobe()
 
   rotateX( radians(cos( (2 * PI * (utc_dayofyear)/365.0) + (2 * PI * 9/365.0) ) * -23.5) ); 
   
-  translate(0, 0, ((earthRadius + 100) / kmPerPixel)); /* translate Z axis */
+  /* Say, while I am here, can I put a circle around the world to indicate the grey line? */ 
+  stroke(128,128,128);
+  fill(128,128,128);
+  ellipseMode(CENTER);
+  ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
   
+  translate(0, 0, ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
   /* plop a pseudo-sun above the earth */
-  
+//  sphereDetail(7); /* number? amount? of tessellated triangles */
+//  sphere(5);
   noStroke();
-  fill(128, 128, 0);
-  sphereDetail(7); /* number? amount? of tessellated triangles */
-  sphere(5);
+  ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+
+// OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
+  translate(0, 0, -2 * ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
+  ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+
+
   
   /* the sun is 149.6 million km from the earth; set light point appropriately far */
   translate(0, 0, ((149.6 * 1000000) / kmPerPixel)); /* translate Z axis */
@@ -503,23 +513,24 @@ void draw() {
 /* do any text processing before rotating the world. */
   fill (255, 192, 0);  /* like old amber screens */ 
   
+  int textX = 10;
   int textY = 0; 
   int textYInc = 15; 
   
   dateFormat.setTimeZone(TimeZone.getTimeZone("Pacific/Midway"));
-  text(dateFormat.format(endDate) + " - Pacific/Midway", 20, (textY += textYInc));
+  text(dateFormat.format(endDate) + " - Pacific/Midway", textX, (textY += textYInc));
 
   dateFormat.setTimeZone(TimeZone.getTimeZone("America/Chicago"));
-  text(dateFormat.format(endDate) + " - America/Chicago", 20, (textY += textYInc));
+  text(dateFormat.format(endDate) + " - America/Chicago", textX, (textY += textYInc));
 
   dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Luxembourg"));
-  text(dateFormat.format(endDate) + " - Europe/Luxembourg", 20, (textY += textYInc));
+  text(dateFormat.format(endDate) + " - Europe/Luxembourg", textX, (textY += textYInc));
     
   dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
-  text(dateFormat.format(endDate) + " - Asia/Tokyo", 20, (textY += textYInc));
+  text(dateFormat.format(endDate) + " - Asia/Tokyo", textX, (textY += textYInc));
   
   dateFormat.setTimeZone(TimeZone.getTimeZone("Australia/Sydney"));
-  text(dateFormat.format(endDate) + " - Australia/Sydney", 20, (textY += textYInc) );
+  text(dateFormat.format(endDate) + " - Australia/Sydney", textX, (textY += textYInc) );
 
   dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
      
