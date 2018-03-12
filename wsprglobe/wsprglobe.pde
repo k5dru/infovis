@@ -17,7 +17,7 @@ import de.bezier.data.sql.*;
 PostgreSQL pgsql;
 void settings()
 { 
-  size(1280, 900, P3D);
+  size(1280, 850, P3D);
   
 }
 
@@ -118,21 +118,15 @@ Date beginDate;
 Date endDate;
 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
+HScrollbar hs1;  // One scrollbars
+
 
 
 void setup() {
   background(255);
 
-  /* try to shift to using an actual date instead of minutes-since-december-1 */
-  try {
-    beginDate = dateFormat.parse("2017-12-01 00:00:00 -0000");
-    println(beginDate);
-    println(dateFormat.format(beginDate));
-    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );  /* time is in milliseconds */ 
-    println(dateFormat.format(endDate));
-  } catch (ParseException e) {
-    e.printStackTrace();
-  }
+/* float xposition, float yposition, int swidth, int sheight, int lethargy */ 
+  hs1 = new HScrollbar(0, height-9, width, 16, 1);
 
   /* thanks to  fjenett 20081129 */
   /* make database connection */
@@ -183,6 +177,27 @@ void setup() {
     // yay, connection failed !
     println ("postgresql connection failed.");
   }
+
+  /* while we're in the data, get the min and max observation times */ 
+  pgsql.query( "select min(observationtime) as min_observationtime, max(observationtime) as max_observationtime from wspr" );
+  if ( pgsql.next() ) { 
+      println( pgsql.getString("min_observationtime") );  
+      println( pgsql.getString("max_observationtime") ); 
+  }
+
+  /* using an actual date instead of minutes-since-december-1 */
+  try {
+    beginDate = dateFormat.parse("2017-11-30 18:00:00 -0600");
+    println(beginDate);
+    println(dateFormat.format(beginDate));
+    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );  /* time is in milliseconds */ 
+    println(dateFormat.format(endDate));
+  } catch (ParseException e) {
+    e.printStackTrace();
+  }
+
+
+
 
   // load JSON coastline, converted from ne_10m_admin_0_boundary_lines_land with https://geoconverter.hsr.ch/
   // bah, that's not the right one. 
@@ -284,15 +299,9 @@ void drawGlobe()
   
   translate(0, 0, ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
   /* plop a pseudo-sun above the earth */
-//  sphereDetail(7); /* number? amount? of tessellated triangles */
-//  sphere(5);
   noStroke();
   fill(128,128,128);
   ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
-
-  fill (255, 192, 0);  /* like old amber screens */ 
-  text("Test",(200 / kmPerPixel), (200 / kmPerPixel));
-
 
 // OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
   translate(0, 0, -2 * ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
@@ -526,6 +535,10 @@ void draw() {
     );
   */   
 
+/* update controls that need updating */ 
+  hs1.update();
+  hs1.display();
+
 /* do any text processing before rotating the world. */
   fill (255, 192, 0);  /* like old amber screens */ 
   
@@ -567,6 +580,7 @@ void draw() {
   if (millis() > (last_load_millis + 100)) {
     last_load_millis = millis(); 
  
+    /* increment input times to DB query by 2 minutes */
     beginDate = new Date(beginDate.getTime() + 2 * (1000 * 60) );  // Java time is in milliseconds  
     endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );   
 
