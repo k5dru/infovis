@@ -1,4 +1,36 @@
 
+/* TODO:
+    Consider this as a mechanism to indicate direction: 
+    beginShape(LINES);
+    stroke(0);
+    vertex(x, y, z);
+    stroke(200, 150);
+    vertex(xb, yb, zb);
+    endShape();
+
+Need to add "setpos" method for slider, 
+  TOdo:  it appears to be setting "spos" but the slider is never changing position. Why? 
+  
+Todo:  click-mouse-wheel should single-step through the data forwards or backwards. 
+
+Need controls for time, observation window, various filters (quality, country, etc.)
+
+Need controls for brightness/contrast
+
+Need booleans to turn on and off different features, such as coastline, greyline, etc.
+
+Need global text color, since I can't depend on the value of stroke or fill in a scrollbar
+
+Set km_per_pixel based on screen size, and use the fullscreen call to make the screen fullscreen
+
+TODO:  update value of endDate based on hs1.getPos(); 
+  as a fraction between   pgsql.getString("min_observationtime") and getString("max_observationtime") ); 
+
+
+
+*/
+
+
 // current viewpoint to rotate to
 float viewpointX = radians(-35); // PI / 6;  /* have to start somewhere */
 float viewpointY = radians(92); // PI / 6;
@@ -120,7 +152,8 @@ SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
 HScrollbar hs1;  // One scrollbars
 
-
+Date min_observationtime;
+Date max_observationtime;
 
 void setup() {
   background(255);
@@ -181,13 +214,17 @@ void setup() {
   /* while we're in the data, get the min and max observation times */ 
   pgsql.query( "select min(observationtime) as min_observationtime, max(observationtime) as max_observationtime from wspr" );
   if ( pgsql.next() ) { 
-      println( pgsql.getString("min_observationtime") );  
+      println( pgsql.getString("min_observationtime") );
       println( pgsql.getString("max_observationtime") ); 
   }
 
   /* using an actual date instead of minutes-since-december-1 */
   try {
     beginDate = dateFormat.parse("2017-11-30 18:00:00 -0600");
+//    min_observationtime = dateFormat.parse(pgsql.getString("min_observationtime"));
+//    max_observationtime = dateFormat.parse(pgsql.getString("max_observationtime"));
+    min_observationtime = dateFormat.parse("2017-11-30 18:00:00 -0600");
+    max_observationtime = dateFormat.parse("2017-12-31 18:00:00 -0600");
     println(beginDate);
     println(dateFormat.format(beginDate));
     endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );  /* time is in milliseconds */ 
@@ -373,10 +410,43 @@ void drawGlobe()
 
 void drawText() 
 { 
-  pushMatrix();  
+  fill (255, 192, 0);  /* like old amber screens */ 
+  
+  int textX = 10;
+  int textY = 0; 
+  int textYInc = 15; 
+  textAlign(LEFT);
+  
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Pacific/Midway"));
+  text(dateFormat.format(endDate) + " - Pacific/Midway", textX, (textY += textYInc));
+
+  dateFormat.setTimeZone(TimeZone.getTimeZone("America/Chicago"));
+  text(dateFormat.format(endDate) + " - America/Chicago", textX, (textY += textYInc));
+
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Luxembourg"));
+  text(dateFormat.format(endDate) + " - Europe/Luxembourg", textX, (textY += textYInc));
+    
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
+  text(dateFormat.format(endDate) + " - Asia/Tokyo", textX, (textY += textYInc));
+  
+  dateFormat.setTimeZone(TimeZone.getTimeZone("Australia/Sydney"));
+  text(dateFormat.format(endDate) + " - Australia/Sydney", textX, (textY += textYInc) );
+
+  dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   
   
-  popMatrix();
+  textAlign(RIGHT);
+  textX = width - 10;
+  textY = 0; 
+  
+  text(mouseX + "," + mouseY, textX, (textY += textYInc)); 
+  
+  //if (frameCount % 10 == 0) println(frameRate + " FPS");
+  text((int) frameRate + " FPS", textX, (textY += textYInc));
+  
+  text("hs1.getPos() = " + hs1.getPos(), textX, (textY += textYInc));
+  
+  
   return;
 }
 
@@ -411,7 +481,7 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
    FIXED? Need to cross the -179 to 1 longitude path the short way 
    FIXED: The lines are drawn crooked but it still looks pretty cool
    FIXED: Altitude 2 is not considered
-   TODO:  Could use the cosine lookup table 
+   TODO:  Could use the cosine lookup table for performance
    FIXED: There are 111 km per degree at the surface.  What at an altitude of 1500 miles? 
    */
   /* is there a midpoint between there and here? */
@@ -479,6 +549,7 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
     /* just call myself twice with half the distance */
     earthArcLevel++;
     /* special case for the first call; go from ground level to space and back: 
+       eh, turns out this isn't so cool after all. commented out.
     if (earthArcLevel == 1) 
     { 
     earthArc(latitude1, longitude1, 0, midlat, midlon, midalt); 
@@ -501,11 +572,10 @@ void draw() {
   /* lemley:  make a function of mouseX and mouseY, when mousePressed */
   /* this changes ths global viewpoint.  */
 
-  if (mousePressed && 
+  if (mousePressed &&   // check if in rough middle of screen 
     (mouseX > width * 0.25 && mouseX < width * 0.75) &&
     (mouseY > height * 0.25 && mouseY < height * 0.75)
     ) {
-    /* as a visual aid, print a light box where the active mouse will move the viewpoint */
     /* OH VERY INTERESTING, this cuts out the back half of the visualization, even though I haven't 
      drawn any arcs yet.  Why?  */
     //    fill(20);  
@@ -536,33 +606,49 @@ void draw() {
   */   
 
 /* update controls that need updating */ 
+  hs1.setNominalValue(dateFormat.format(endDate));
+  
   hs1.update();
   hs1.display();
+  
+  if (mousePressed && mouseY > (height - 20))  /* TODO, and mouse is within the area of the control */ 
+  { 
+    long millisecondsIntoWindow = (long)(
+        (max_observationtime.getTime() -  min_observationtime.getTime()) // milliseconds in observable window
+        * (hs1.getPos() / (double) width)  // 0.0 to 1.0 depending on scrollbar position 
+    ); 
+    
+    /* round off to minute */ 
+    millisecondsIntoWindow /= 60000;
+    millisecondsIntoWindow *= 60000;
+ 
+    beginDate = new Date(min_observationtime.getTime() + millisecondsIntoWindow);
+    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );    
+  } 
+  else
+  { 
+    hs1.setPos( (float) (
+        (double)(endDate.getTime() -  min_observationtime.getTime()) // milliseconds in observable window
+        / 
+        (double)(max_observationtime.getTime() -  min_observationtime.getTime()) // milliseconds in observable window
+    ) * width); 
+  }  
+    
+    
+/* TODO:  update value of beginDate and endDate based on hs1.getPos(); 
+  as a fraction between   pgsql.getString("min_observationtime") and getString("max_observationtime") ); 
+   based on these fragments:  
+   beginDate = dateFormat.parse("2017-11-30 18:00:00 -0600");
+    min_observationtime = dateFormat.parse("2017-11-30 18:00:00 -0600");
+    max_observationtime = dateFormat.parse("2017-12-31 18:00:00 -0600");
+    println(beginDate);
+    println(dateFormat.format(beginDate));
+*/   
+ 
 
 /* do any text processing before rotating the world. */
-  fill (255, 192, 0);  /* like old amber screens */ 
+  drawText();
   
-  int textX = 10;
-  int textY = 0; 
-  int textYInc = 15; 
-  
-  dateFormat.setTimeZone(TimeZone.getTimeZone("Pacific/Midway"));
-  text(dateFormat.format(endDate) + " - Pacific/Midway", textX, (textY += textYInc));
-
-  dateFormat.setTimeZone(TimeZone.getTimeZone("America/Chicago"));
-  text(dateFormat.format(endDate) + " - America/Chicago", textX, (textY += textYInc));
-
-  dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Luxembourg"));
-  text(dateFormat.format(endDate) + " - Europe/Luxembourg", textX, (textY += textYInc));
-    
-  dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
-  text(dateFormat.format(endDate) + " - Asia/Tokyo", textX, (textY += textYInc));
-  
-  dateFormat.setTimeZone(TimeZone.getTimeZone("Australia/Sydney"));
-  text(dateFormat.format(endDate) + " - Australia/Sydney", textX, (textY += textYInc) );
-
-  dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-     
   translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);
   rotateY(viewpointY);
@@ -577,7 +663,7 @@ void draw() {
   drawGlobe();
   
 
-  if (millis() > (last_load_millis + 100)) {
+  if (millis() > (last_load_millis + 100) && !mousePressed ) {
     last_load_millis = millis(); 
  
     /* increment input times to DB query by 2 minutes */
@@ -586,6 +672,8 @@ void draw() {
 
     loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
   }
+
+
 
   // With an array, we say balls.length, with an ArrayList, we say balls.size()
   // The length of an ArrayList is dynamic
@@ -598,6 +686,5 @@ void draw() {
     Mark mark = marks.get(i);
     mark.display();
   }
- 
-  if (frameCount % 10 == 0) println(frameRate + " FPS"); 
+   
 }

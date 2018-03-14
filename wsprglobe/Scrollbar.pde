@@ -1,4 +1,6 @@
-/* lifted entirely from the Scrollbar example in Processing 3.3.6 */
+/* lifted entirely from the Scrollbar example in Processing 3.3.6, 
+   modified to display a nominal value over the slider 
+*/
 
 /* TODO:  add a setpos method. */
 
@@ -7,7 +9,6 @@
  * 
  * Move the scrollbars left and right to change the positions of the images. 
  */
-
 
 class HScrollbar {
   int swidth, sheight;    // width and height of bar
@@ -18,6 +19,7 @@ class HScrollbar {
   boolean over;           // is the mouse over the slider?
   boolean locked;
   float ratio;
+  String nominalvalue = "";    // what, if anything, to display over the slider? 
 
 /* float xposition, float yposition, int swidth, int sheight, int lethargy */ 
   HScrollbar (float xp, float yp, int sw, int sh, int l) {
@@ -67,6 +69,10 @@ class HScrollbar {
     }
   }
 
+  void setNominalValue(String s) { 
+    nominalvalue = s; 
+  }
+  
   void display() {
     noStroke();
     fill(204);
@@ -77,6 +83,15 @@ class HScrollbar {
       fill(102, 102, 102);
     }
     rect(spos, ypos, sheight, sheight);
+    
+    if (nominalvalue.length() > 0) { 
+      float tw = textWidth(nominalvalue);
+      float textHeight = 8;  /* how to make dynamic? */
+      float textxpos = min(width - tw, max(0, spos - (tw / 2)));
+      textAlign(LEFT);
+      fill (255, 192, 0);  /* like old amber screens */ 
+      text(nominalvalue, textxpos, ypos - textHeight);
+    }
   }
 
   float getPos() {
@@ -84,10 +99,17 @@ class HScrollbar {
     // 0 and the total width of the scrollbar
     return spos * ratio;
   }
+
+  void setPos(float f) {
+    spos = f / ratio;
+  }
+
 }
 
 
-/* 
+/*  original sample code:   
+
+
 HScrollbar hs1, hs2;  // Two scrollbars
 PImage img1, img2;  // Two images to load
 
