@@ -1,5 +1,24 @@
 
 /* TODO:
+
+Sliders for:  
+  minutes old observations
+  update rate
+  spin rate
+  quality of observations 
+  received strength of observations 
+
+filter for signals that are new, not seen in a few hours
+filter for signals that are just barely perceptable 
+different marks for really strong signals - maybe arrows or hashes or something. 
+distinguish midnight sun point from midday sun point
+more precise time control, with time spinner 
+identify transmitters by glyph
+
+sloppyarc vs. precisionarc.  Use sloppyarc for coastlines.
+
+Legend for drift or band.
+
     Consider this as a mechanism to indicate direction: 
     beginShape(LINES);
     stroke(0);
@@ -17,13 +36,15 @@ Need controls for time, observation window, various filters (quality, country, e
 
 Need controls for brightness/contrast
 
-Need booleans to turn on and off different features, such as coastline, greyline, etc.
+DONE: Need booleans to turn on and off different features, such as coastline, greyline, etc.
 
 Need global text color, since I can't depend on the value of stroke or fill in a scrollbar
 
 Set km_per_pixel based on screen size, and use the fullscreen call to make the screen fullscreen
 
-TODO:  update value of endDate based on hs1.getPos(); 
+normalize latitude not using a loop
+
+DONE:  update value of endDate based on hs1.getPos(); 
   as a fraction between   pgsql.getString("min_observationtime") and getString("max_observationtime") ); 
 
 
@@ -111,8 +132,8 @@ void loadMarks(Date beginDate, Date endDate) {
 +"  from wspr       "
 +"  where observationtime between '" + dateFormat.format(beginDate) + "'::timestamp"
 +"                            and '" + dateFormat.format(endDate) + "'::timestamp"
-+"  and quality_quartile = 4    "
-+"  limit 10000           "
++"  and quality_quartile = 4 and rx_snr < -18 "
+//+"  order by random() limit 100           "
   );
      
   /* 1649 rows at '2017-12-14 06:08-06' */
@@ -151,15 +172,68 @@ Date endDate;
 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
 HScrollbar hs1;  // One scrollbars
+boolButton coastlineButton; 
+boolButton greylineButton;
+boolButton spinButton;
+boolButton updateButton;
+boolButton sunPointButton;
 
 Date min_observationtime;
 Date max_observationtime;
 
+void setupControls() 
+{ 
+  
+/* float xposition, float yposition, int swidth, int sheight, int lethargy */ 
+  hs1 = new HScrollbar(0, height-9, width, 16, 1);
+
+  coastlineButton = new boolButton(10, 120, 10,10);
+  coastlineButton.setNominalValue("Show Coastlines");
+  coastlineButton.setState(false);
+
+  greylineButton = new boolButton(10, 140, 10,10);
+  greylineButton.setNominalValue("Show Greyline");
+  greylineButton.setState(false);
+
+  spinButton = new boolButton(10, 160, 10,10);
+  spinButton.setNominalValue("Auto Spin");
+  spinButton.setState(false);
+
+  updateButton = new boolButton(10, 180, 10,10);
+  updateButton.setNominalValue("Auto Update");
+  updateButton.setState(true);
+
+  sunPointButton = new boolButton(10, 200, 10,10);
+  sunPointButton.setNominalValue("Sun Point Source");
+  sunPointButton.setState(false);
+
+}  
+
+void updateControls() 
+{ 
+/* update controls that need updating */ 
+  hs1.setNominalValue(dateFormat.format(endDate));
+  
+  hs1.update();
+  hs1.display();
+  coastlineButton.update(); 
+  coastlineButton.display();
+  greylineButton.update(); 
+  greylineButton.display();
+  spinButton.update(); 
+  spinButton.display();
+  updateButton.update(); 
+  updateButton.display();
+  sunPointButton.update(); 
+  sunPointButton.display();
+}
+
+
+
 void setup() {
   background(255);
 
-/* float xposition, float yposition, int swidth, int sheight, int lethargy */ 
-  hs1 = new HScrollbar(0, height-9, width, 16, 1);
+  setupControls(); 
 
   /* thanks to  fjenett 20081129 */
   /* make database connection */
@@ -252,6 +326,8 @@ void setup() {
 
 void drawCoastline()
 { 
+
+  
   /* with thanks to https://forum.processing.org/one/topic/how-to-read-geojson-data.html */ 
   JSONArray coasts = json_coastline.getJSONArray("features"); 
   for (int i = 0; i < coasts.size(); i++) { 
@@ -322,52 +398,67 @@ void drawGlobe()
 
   rotateX( radians(cos( (2 * PI * (utc_dayofyear)/365.0) + (2 * PI * 9/365.0) ) * -23.5) ); 
   
+
   /* Say, while I am here, can I put a circle around the world to indicate the grey line? */ 
-  stroke(128,128,128);
-  fill(128,128,128);
-  //noFill();
-  ellipseMode(CENTER);
-  translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
-  ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
-  translate(0, 0, (+100 / kmPerPixel)); /* translate Z axis to 10km above surface*/
-  ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
-  translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
-  ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+  if (greylineButton.getState() == true) 
+  {
+    stroke(128,128,128);
+    fill(128,128,128);
+    //noFill();
+    ellipseMode(CENTER);
+    translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+    translate(0, 0, (+100 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+    translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+
+    /* plop a pseudo-sun above the earth */
+    noStroke();
+    fill(128,128,128);
+    translate(0, 0, ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+    
+    // OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
+    translate(0, 0, -2 * ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+    
+    /* can I overwite with a transparant one to make it a little moon? 
+    fill(128,128,128, 0);
+    ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+    no, I can't. the other one just shows under it. 
+    */
+  }
   
-  translate(0, 0, ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
-  /* plop a pseudo-sun above the earth */
-  noStroke();
-  fill(128,128,128);
-  ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
-
-// OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
-  translate(0, 0, -2 * ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
-  ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
-
-/* can I overwite with a transparant one to make it a little moon? 
-  fill(128,128,128, 0);
-  ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
-  no, I can't. the other one just shows under it. 
-*/
-
-  
-  /* the sun is 149.6 million km from the earth; set light point appropriately far */
-  translate(0, 0, ((149.6 * 1000000) / kmPerPixel)); /* translate Z axis */
-
   /* fill(10, 10, 120); 10, 10, 120 is my guess of earth blue, or my guess at it at least */
-  fill(10, 10, 64); 
-  fill(32, 32, 128);
+  //fill(10, 10, 64); 
   //  noFill();
 
-  pointLight(255, 255, 255, 0, 0, 0);
-  popMatrix(); 
+  if (sunPointButton.getState()) { 
+    /* the sun is 149.6 million km from the earth; set light point appropriately far */
+    translate(0, 0, ((149.6 * 1000000) / kmPerPixel)); /* translate Z axis */
+    fill(32, 32, 128);
+    pointLight(255, 255, 255, 0, 0, 0);
+  }
+  else
+  {
+    fill(32, 32, 128);
+  }
   
-  //stroke(0, 0, 255, 80);
+  popMatrix(); 
+
+  
+  if (coastlineButton.getState() == false) 
+    stroke(0, 0, 255, 80);
+  else
+    noStroke();
+
   sphereDetail(90); /* number? amount? of tessellated triangles */
 
   // sphere(height / 2 * 0.40);
   sphere (earthRadius / kmPerPixel);
 
+    
   /* try to mark the poles */
   fill(20);  
   stroke(255, 0, 0); 
@@ -376,6 +467,10 @@ void drawGlobe()
   stroke(0, 0, 255);
   //earthPoint(-90.0, 0, 300); earthPoint(-90.0, 0, 600); earthPoint(-90.0, 0, 900);
   earthArc(-90, 0, 0, -90, 0, 3000);
+
+  if (coastlineButton.getState() == false) 
+    return;
+
 
   /* mark the equator and +45 degrees north */
   stroke(0, 180, 0, 64);
@@ -394,14 +489,19 @@ void drawGlobe()
   /* do the same thing with earthArc */
   /* mark the latitude lines 
    */
+  
+   
   for (int lat = -80; lat <= 80; lat += 10)
     for (int lon = -180; lon < 180; lon += 10)  
       earthArc(lat, lon, 0, lat, lon+10, 0); 
 
-  /* mark the maridians  
-   */
+  /* mark the maridians   
   for (int lon = -170; lon <= 180; lon += 10)  
-    earthArc(-90, lon, 0, 90, lon, 0); 
+    earthArc(-90, lon, 0, 90, lon, 0);
+  */ 
+  /* better, mark each hour, which is every 15 degrees */
+  for (int lon = -165; lon <= 180; lon += 15)  
+    earthArc(-90, lon, 0, 90, lon, 0);
   
   stroke(0, 180, 0, 128);
   drawCoastline();
@@ -534,14 +634,32 @@ void earthArc(float latitude1, float longitude1, float altitude1, float latitude
 
     /* stroke(random(255)); */
 
+/*   This works very very well: */ 
     line(
       (longitude1 - midlon) * km_per_degree_longitude / kmPerPixel, 
       (midlat - latitude1) * km_per_degree_latitude / kmPerPixel, 
       (altitude1 - midalt) / kmPerPixel, 
       (longitude2 - midlon) * km_per_degree_longitude / kmPerPixel, 
       (midlat - latitude2) * km_per_degree_latitude / kmPerPixel, 
-      (altitude2 - midalt) / kmPerPixel /* change this to just midalt for a cool effect */
+      (altitude2 - midalt) / kmPerPixel // change this to just midalt for a cool effect 
     );
+
+
+  
+  /*  -- shaded dashed lines and indicate direction.  
+    beginShape(LINES);
+    stroke(0);
+    vertex(
+          (longitude1 - midlon) * km_per_degree_longitude / kmPerPixel, 
+      (midlat - latitude1) * km_per_degree_latitude / kmPerPixel, 
+      (altitude1 - midalt) / kmPerPixel) ; 
+    stroke(200, 150);
+    vertex(
+      (longitude2 - midlon) * km_per_degree_longitude / kmPerPixel, 
+      (midlat - latitude2) * km_per_degree_latitude / kmPerPixel, 
+      (altitude2 - midalt) / kmPerPixel  );
+    endShape();
+*/
 
     popMatrix();
   } else /* not close enough for a straight line to look OK */
@@ -568,6 +686,7 @@ int last_spin_millis = 0;
 
 void draw() {
   background(0);
+  strokeWeight(2); 
 
   /* lemley:  make a function of mouseX and mouseY, when mousePressed */
   /* this changes ths global viewpoint.  */
@@ -605,12 +724,9 @@ void draw() {
     );
   */   
 
-/* update controls that need updating */ 
-  hs1.setNominalValue(dateFormat.format(endDate));
   
-  hs1.update();
-  hs1.display();
-  
+  updateControls(); 
+
   if (mousePressed && mouseY > (height - 20))  /* TODO, and mouse is within the area of the control */ 
   { 
     long millisecondsIntoWindow = (long)(
@@ -652,7 +768,11 @@ void draw() {
   translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);
   rotateY(viewpointY);
-  viewpointY += ((millis() - last_spin_millis) / 30000.0); 
+
+  if (spinButton.getState()) 
+  { 
+    viewpointY += ((millis() - last_spin_millis) / 30000.0);
+  }
   last_spin_millis = millis(); 
   //0.01; 
    
@@ -665,12 +785,14 @@ void draw() {
 
   if (millis() > (last_load_millis + 100) && !mousePressed ) {
     last_load_millis = millis(); 
- 
-    /* increment input times to DB query by 2 minutes */
-    beginDate = new Date(beginDate.getTime() + 2 * (1000 * 60) );  // Java time is in milliseconds  
-    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );   
 
-    loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
+    if (updateButton.getState())
+    { 
+      /* increment input times to DB query by 2 minutes */
+      beginDate = new Date(beginDate.getTime() + 2 * (1000 * 60) );  // Java time is in milliseconds  
+      endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );   
+      loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
+    }  
   }
 
 

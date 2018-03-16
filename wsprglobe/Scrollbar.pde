@@ -150,3 +150,111 @@ void draw() {
 }
 
 */
+
+
+class boolButton {
+  int swidth, sheight;    // width and height of bar
+  float xpos, ypos;       // x and y position of bar
+  boolean over;           // is the mouse over the slider?
+  boolean ready = true;  // ready to be clicked.  Suppress clicks if one has just happened and mouse is still clicked. */
+  boolean currentState = false;
+  String nominalvalue = "";    // what, if anything, to display over the slider? 
+  boolean prevPressed = false;
+
+  /* float xposition, float yposition, int swidth, int sheight, int lethargy */ 
+  boolButton (float xp, float yp, int sw, int sh) {
+    swidth = sw;
+    sheight = sh;
+    int widthtoheight = sw - sh;
+    xpos = xp;
+    ypos = yp-sheight/2;
+  }
+
+  void update() {
+    if (overEvent()) {
+      over = true;
+      if (mousePressed == false) 
+         ready = true;
+    } else {
+      over = false;
+      ready = true;
+    }
+    
+    if (mousePressed && over && ready) {
+      ready = false;
+      currentState = !currentState;
+    }
+  }
+
+  boolean overEvent() {
+    if (mouseX > xpos && mouseX < xpos+swidth &&
+       mouseY > ypos && mouseY < ypos+sheight) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void setNominalValue(String s) { 
+    nominalvalue = s; 
+  }
+  
+  void display() {
+    fill(204);
+    rect(xpos, ypos, swidth, sheight);
+    if (over) {
+      if (currentState) 
+      {
+        stroke(0,180,0);
+        fill(0,151,0);
+      }
+      else
+      {
+        fill(64);
+        stroke(128,0,0);
+      }  
+    } 
+    else {
+      if (currentState) 
+      {
+        stroke(0,148,0);
+        fill(0,132,0);
+      }
+      else
+      {
+         stroke(96,0,0);
+        fill(32);
+      }
+    }
+    
+    rect(xpos, ypos, swidth, sheight);
+
+    if (currentState)  /* make a checkmark for the colorblind :) */
+    { 
+       stroke(222,222,0); 
+       line(xpos, ypos, xpos + (swidth / 2), ypos + (sheight / 2));
+       line(xpos + (swidth / 2), ypos + (sheight / 2), xpos + swidth * 2, ypos - sheight / 2); 
+    }
+    
+    if (nominalvalue.length() > 0) { 
+//      float tw = textWidth(nominalvalue);
+//      float textHeight = 8;  /* how to make dynamic? */
+//      float textxpos = min(width - tw, max(0, xpos - (tw / 2)));
+      textAlign(LEFT);
+      noStroke();
+      fill (255, 192, 0);  /* like old amber screens */ 
+      text(nominalvalue, xpos + swidth + 4, ypos + sheight);
+    }
+  }
+
+  boolean getState() {
+    // Convert spos to be values between
+    // 0 and the total width of the scrollbar
+    return currentState;
+  }
+
+  void setState(boolean b) {
+    currentState = b;
+  }
+
+}
