@@ -198,6 +198,8 @@ void setup() {
   String http = "http://";
   //earth = loadImage( http + "previewcf.turbosquid.com/Preview/2014/08/01__15_41_30/Earth.JPG5a55ca7f-1d7c-41d7-b161-80501e00d095Larger.jpg");
   earth = loadImage ("world32k.jpg"); // image courtesy of processing.org TextureSphere example 
+ // earth = loadImage ("World_3DShaded_Relief_Topography_21600.jpg"); // online at http://jigaprints.com/product/world-map-topographic-3d-shaded-relief-puzzle/
+ // this one isn't quiote right:  earth = loadImage ("http://worldmap.org.ua/Maps/World/Political_map_world_eng.jpg");
   noStroke(); 
   noFill(); 
   sphereDetail(90);
@@ -601,8 +603,9 @@ void draw() {
     millisecondsIntoWindow /= 60000;
     millisecondsIntoWindow *= 60000;
  
-    beginDate = new Date(min_observationtime.getTime() + millisecondsIntoWindow);
-    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );    
+    endDate = new Date(min_observationtime.getTime() + millisecondsIntoWindow);
+    beginDate = new Date(endDate.getTime() - (1000 * 60) * (int) (observationWindow.getValue() * 15) );    
+    thread("loadMarks"); 
   } 
   else
   { 
@@ -647,14 +650,14 @@ void draw() {
   drawGlobe();
   
 
-  if (millis() > (last_load_millis + 100) && !loadingMarks ) {
+  if (millis() > (last_load_millis + (int)(updateRate.getValue() * 1000)) && !loadingMarks ) {
     last_load_millis = millis(); 
 
     if (updateButton.getState() || marks == null)
     { 
       /* increment input times to DB query by 2 minutes */
-      beginDate = new Date(beginDate.getTime() + 2 * (1000 * 60) );  // Java time is in milliseconds  
-      endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );   
+      beginDate = new Date(beginDate.getTime() + (int) (timePerUpdate.getValue() * 60) * (1000 * 60) );  // Java time is in milliseconds  
+      endDate = new Date(beginDate.getTime() + (int) (observationWindow.getValue() * 15) * (1000 * 60) );   
  //     loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
       thread("loadMarks"); 
     }  

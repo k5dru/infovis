@@ -1,6 +1,7 @@
 HScrollbar hs1; 
 HScrollbar spinRate;  
 HScrollbar updateRate;  
+HScrollbar timePerUpdate;  
 HScrollbar coastBright;  
 HScrollbar lightBright;  
 HScrollbar observationWindow;  
@@ -51,22 +52,26 @@ void setupControls()
   coastBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
   coastBright.setValue(0.7);
 
-  greylineButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
-  greylineButton.setNominalValue("Show Greyline");
-  greylineButton.setState(false);
+  lightBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  lightBright.setValue(0.7);
+
 
   sunPointButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   sunPointButton.setNominalValue("Sun Point Source");
   sunPointButton.setState(false);
 
-  lightBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-  lightBright.setValue(0.7);
+  greylineButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  greylineButton.setNominalValue("Show Greyline");
+  greylineButton.setState(false);
+
 
   updateButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   updateButton.setNominalValue("Auto Update");
   updateButton.setState(false);
 
   updateRate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+
+  timePerUpdate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
 
   observationWindow = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
 
@@ -118,11 +123,15 @@ void updateControls()
     updateButton.display();
     
     updateRate.update();
-    updateRate.setNominalValue("Update Rate: " + round(updateRate.getValue() * 100) + "%" );
+    updateRate.setNominalValue("Update Rate: " + (int)(updateRate.getValue() * 1000) + "ms" );
     updateRate.display();
 
+    timePerUpdate.update();
+    timePerUpdate.setNominalValue("Increment Per Update: " + (int) (timePerUpdate.getValue() * 60) + " minutes" );
+    timePerUpdate.display();
+
     observationWindow.update();
-    observationWindow.setNominalValue("Observation Window: " + round(observationWindow.getValue() * 10000) / 100.0 + "%" );
+    observationWindow.setNominalValue("Observation Window: " + (int) (observationWindow.getValue() * 15) + " minutes" );
     observationWindow.display();
     
     sunPointButton.update(); 
