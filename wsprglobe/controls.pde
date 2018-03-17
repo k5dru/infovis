@@ -2,6 +2,8 @@ HScrollbar hs1;
 HScrollbar spinRate;  
 HScrollbar updateRate;  
 HScrollbar coastBright;  
+HScrollbar lightBright;  
+HScrollbar observationWindow;  
 
 boolButton coastlineButton; 
 boolButton greylineButton;
@@ -25,7 +27,7 @@ void setupControls()
 
   showControlsButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showControlsButton.setNominalValue("Show Controls");
-  showControlsButton.setState(false);
+  showControlsButton.setState(true);
 
   showMarksButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showMarksButton.setNominalValue("Show Marks");
@@ -40,12 +42,14 @@ void setupControls()
   spinButton.setState(false);
 
   spinRate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-
+  spinRate.setValue(0.6);
+  
   coastlineButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   coastlineButton.setNominalValue("Show Coastlines");
   coastlineButton.setState(false);
 
   coastBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  coastBright.setValue(0.7);
 
   greylineButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   greylineButton.setNominalValue("Show Greyline");
@@ -55,12 +59,16 @@ void setupControls()
   sunPointButton.setNominalValue("Sun Point Source");
   sunPointButton.setState(false);
 
+  lightBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  lightBright.setValue(0.7);
+
   updateButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   updateButton.setNominalValue("Auto Update");
   updateButton.setState(false);
 
   updateRate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
 
+  observationWindow = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
 
 }  
 
@@ -91,11 +99,18 @@ void updateControls()
     coastlineButton.display();
     
     coastBright.update();
-    coastBright.setNominalValue("Brightness: " + round(coastBright.getValue() * 100) + "%" );
+    coastBright.setNominalValue("Coast Brightness: " + round(coastBright.getValue() * 100) + "%" );
     coastBright.display();
+
 
     greylineButton.update(); 
     greylineButton.display();
+
+    lightBright.update();
+    lightBright.setNominalValue("Light Brightness: " + round(lightBright.getValue() * 100) + "%" );
+    lightBright.display();
+
+    
     spinButton.update(); 
     spinButton.display();
 
@@ -105,6 +120,10 @@ void updateControls()
     updateRate.update();
     updateRate.setNominalValue("Update Rate: " + round(updateRate.getValue() * 100) + "%" );
     updateRate.display();
+
+    observationWindow.update();
+    observationWindow.setNominalValue("Observation Window: " + round(observationWindow.getValue() * 10000) / 100.0 + "%" );
+    observationWindow.display();
     
     sunPointButton.update(); 
     sunPointButton.display();
@@ -133,7 +152,8 @@ class HScrollbar {
   boolean over;           // is the mouse over the slider?
   boolean locked;
   float ratio;
-  String nominalvalue = "";    // what, if anything, to display over the slider? 
+  String nominalvalue = "";    /* james: what, if anything, to display over the slider? */ 
+ // float value;                /* james:  make this go from 0.0 to 1.0 based on spos */ 
 
   /* float xposition, float yposition, int swidth, int sheight, int lethargy */
   HScrollbar (float xp, float yp, int sw, int sh, int l) {
@@ -153,8 +173,7 @@ class HScrollbar {
   void update() {
     if (overEvent()) {
       over = true;
-    } else {
-      over = false;
+    } else {      over = false;
     }
     if (mousePressed && over) {
       locked = true;
@@ -165,7 +184,7 @@ class HScrollbar {
     if (locked) {
       newspos = constrain(mouseX-sheight/2, sposMin, sposMax);
     }
-    if (abs(newspos - spos) > 1) {
+    if (abs(newspos - spos) > 0) {
       spos = spos + (newspos-spos)/loose;
     }
   }
@@ -201,7 +220,7 @@ class HScrollbar {
     if (nominalvalue.length() > 0) { 
       float tw = textWidth(nominalvalue);
       float textHeight = 8;  /* how to make dynamic? */
-      float textxpos = min(width - tw, max(0, spos - (tw / 2)));
+      float textxpos = round(min(width - tw, max(0, spos - (tw / 2))));
       textAlign(LEFT);
       fill (255, 192, 0);  /* like old amber screens */
 
@@ -218,11 +237,11 @@ class HScrollbar {
   float getValue() {
     // Convert spos to be values between
     // 0 and the total width of the scrollbar
-    return ((spos - 1) * ratio) / swidth;
+    return (spos - sposMin) / (sposMax - sposMin);
   }
 
-  void setPos(float f) {
-    spos = f / ratio;
+  void setValue(float f) {
+    newspos = sposMin + (sposMax - sposMin) * min(1.0, max(f,0.0));
   }
 }
 

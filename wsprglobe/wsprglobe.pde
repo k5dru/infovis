@@ -4,7 +4,7 @@
 Sliders for:  
   minutes old observations
   update rate
-  spin rate
+  DONE: spin rate
   quality of observations 
   received strength of observations 
 
@@ -186,9 +186,26 @@ SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 Date min_observationtime;
 Date max_observationtime;
 
-void setup() {
-  background(255);
 
+/* from here: https://forum.processing.org/two/discussion/13500/applying-a-texture-to-a-sphere */
+PImage earth; 
+PShape globe;
+
+void setup() {
+  background(0);
+
+/* from here: https://forum.processing.org/two/discussion/13500/applying-a-texture-to-a-sphere */
+  String http = "http://";
+  //earth = loadImage( http + "previewcf.turbosquid.com/Preview/2014/08/01__15_41_30/Earth.JPG5a55ca7f-1d7c-41d7-b161-80501e00d095Larger.jpg");
+  earth = loadImage ("world32k.jpg"); // image courtesy of processing.org TextureSphere example 
+  noStroke(); 
+  noFill(); 
+  sphereDetail(90);
+  
+  globe = createShape(SPHERE, earthRadius / kmPerPixel); 
+  
+  globe.setTexture(earth);
+  
   setupControls(); 
 
   /* thanks to  fjenett 20081129 */
@@ -373,14 +390,20 @@ void drawGlobe()
     stroke(128,128,128);
     strokeWeight(2);   
     fill(128,128,128);
-    
     translate(0, 0, ((earthRadius + 20) / kmPerPixel)); /* translate Z axis to 10km above surface*/
-
     ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+   
+    noFill();
+    text("D", (100 / kmPerPixel), - (100 / kmPerPixel));
     
     // OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
+    stroke(128,128,128);
+    strokeWeight(2);   
+    fill(128,128,128);
     translate(0, 0, -2 * ((earthRadius + 20) / kmPerPixel)); /* translate Z axis to 10km above surface*/
     ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
+    noFill();
+    text("N",  (100 / kmPerPixel), - (100 / kmPerPixel));
     
     /* can I overwite with a transparant one to make it a little moon? 
     fill(128,128,128, 0);
@@ -393,14 +416,19 @@ void drawGlobe()
   //fill(10, 10, 64); 
   //  noFill();
 
+  float lightValue = lightBright.getValue() * 255;
   if (sunPointButton.getState()) { 
     /* the sun is 149.6 million km from the earth; set light point appropriately far */
     translate(0, 0, ((149.6 * 1000000) / kmPerPixel)); /* translate Z axis */
     fill(32, 32, 128);
-    pointLight(255, 255, 255, 0, 0, 0);
+    float f = lightBright.getValue() * 255; 
+    pointLight(lightValue, lightValue, lightValue, 0, 0, 0);
+    ambientLight(0,0,0);
   }
   else
   {
+    ambientLight(lightValue,lightValue,lightValue);
+    pointLight(0, 0, 0, 0, 0, 0);
     fill(32, 32, 128);
   }
   
@@ -412,11 +440,14 @@ void drawGlobe()
   else
     noStroke();
 
-  sphereDetail(90); /* number? amount? of tessellated triangles */
-
-  // sphere(height / 2 * 0.40);
+  /* working way to make a blue ball: 
+  sphereDetail(90); // number? amount? of tessellated triangles 
   sphere (earthRadius / kmPerPixel);
-
+  */
+  
+  rotateY(radians(90)); 
+  shape(globe);
+  rotateY(radians(-90)); 
     
   /* try to mark the poles */
   fill(20);  
@@ -575,13 +606,12 @@ void draw() {
   } 
   else
   { 
-    hs1.setPos( (float) (
+    hs1.setValue( (float) (
         (double)(endDate.getTime() -  min_observationtime.getTime()) // milliseconds in observable window
         / 
         (double)(max_observationtime.getTime() -  min_observationtime.getTime()) // milliseconds in observable window
-    ) * width); 
+    )); 
   }  
-    
     
 /* TODO:  update value of beginDate and endDate based on hs1.getPos(); 
   as a fraction between   pgsql.getString("min_observationtime") and getString("max_observationtime") ); 
@@ -595,7 +625,8 @@ void draw() {
  
 
 /* do any text processing before rotating the world. */
-  if (showTextButton.getState()) drawText();
+  if (showTextButton.getState())
+    drawText();
   
   translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);
