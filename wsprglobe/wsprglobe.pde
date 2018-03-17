@@ -114,16 +114,26 @@ class Mark {
       stroke(255,255,0, alpha);
     }
     
+    strokeWeight(1); 
     earthArc(lat1, lon1, alt1, lat2, lon2, alt2); 
   }
 }
 
-ArrayList<Mark> marks;
+ArrayList<Mark> marks;         // the list that will be displayed from always
+ArrayList<Mark> newMarks;      // work list, to load then swap to the marks list
+boolean loadingMarks = false;  // semaphore for loading the newMarks arraylist 
 
-void loadMarks(Date beginDate, Date endDate) {
+//void loadMarks(Date beginDate, Date endDate) {
+ 
+void loadMarks() {
+
+  if (loadingMarks) return;  // some other thread beat me to it. 
+  loadingMarks = true;       // set the semaphore. TODO: use a proper semaphore method. 
+  
   int startMillis = millis(); 
+
   print("### entering loadMarks("+ dateFormat.format(beginDate) + ","+ dateFormat.format(endDate) +") ... "); 
-  marks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
+  newMarks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
 
   pgsql.query(""
 +"  select tx_latitude, tx_longitude, rx_latitude "
@@ -140,7 +150,7 @@ void loadMarks(Date beginDate, Date endDate) {
 
   while ( pgsql.next() )
   {
-    marks.add(
+    newMarks.add(
       new Mark( 
         pgsql.getFloat("tx_latitude"), 
         pgsql.getFloat("tx_longitude"), 
@@ -155,8 +165,10 @@ void loadMarks(Date beginDate, Date endDate) {
     );
   }
     
-  println (marks.size() + " marks loaded in " + (millis() - startMillis) + " ms"); 
-   
+  println (newMarks.size() + " marks loaded in " + (millis() - startMillis) + " ms"); 
+  marks=newMarks; 
+  loadingMarks = false;
+  
 }
 
 
@@ -171,64 +183,8 @@ Date beginDate;
 Date endDate;
 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
-HScrollbar hs1;  // One scrollbars
-boolButton coastlineButton; 
-boolButton greylineButton;
-boolButton spinButton;
-boolButton updateButton;
-boolButton sunPointButton;
-
 Date min_observationtime;
 Date max_observationtime;
-
-void setupControls() 
-{ 
-  
-/* float xposition, float yposition, int swidth, int sheight, int lethargy */ 
-  hs1 = new HScrollbar(0, height-9, width, 16, 1);
-
-  coastlineButton = new boolButton(10, 120, 10,10);
-  coastlineButton.setNominalValue("Show Coastlines");
-  coastlineButton.setState(false);
-
-  greylineButton = new boolButton(10, 140, 10,10);
-  greylineButton.setNominalValue("Show Greyline");
-  greylineButton.setState(false);
-
-  spinButton = new boolButton(10, 160, 10,10);
-  spinButton.setNominalValue("Auto Spin");
-  spinButton.setState(false);
-
-  updateButton = new boolButton(10, 180, 10,10);
-  updateButton.setNominalValue("Auto Update");
-  updateButton.setState(true);
-
-  sunPointButton = new boolButton(10, 200, 10,10);
-  sunPointButton.setNominalValue("Sun Point Source");
-  sunPointButton.setState(false);
-
-}  
-
-void updateControls() 
-{ 
-/* update controls that need updating */ 
-  hs1.setNominalValue(dateFormat.format(endDate));
-  
-  hs1.update();
-  hs1.display();
-  coastlineButton.update(); 
-  coastlineButton.display();
-  greylineButton.update(); 
-  greylineButton.display();
-  spinButton.update(); 
-  spinButton.display();
-  updateButton.update(); 
-  updateButton.display();
-  sunPointButton.update(); 
-  sunPointButton.display();
-}
-
-
 
 void setup() {
   background(255);
@@ -294,7 +250,7 @@ void setup() {
 
   /* using an actual date instead of minutes-since-december-1 */
   try {
-    beginDate = dateFormat.parse("2017-11-30 18:00:00 -0600");
+    beginDate = dateFormat.parse("2017-12-01 08:48:00 -0000");  /* many marks at this time */
 //    min_observationtime = dateFormat.parse(pgsql.getString("min_observationtime"));
 //    max_observationtime = dateFormat.parse(pgsql.getString("max_observationtime"));
     min_observationtime = dateFormat.parse("2017-11-30 18:00:00 -0600");
@@ -326,7 +282,7 @@ void setup() {
 
 void drawCoastline()
 { 
-
+  strokeWeight(2);
   
   /* with thanks to https://forum.processing.org/one/topic/how-to-read-geojson-data.html */ 
   JSONArray coasts = json_coastline.getJSONArray("features"); 
@@ -337,7 +293,7 @@ void drawCoastline()
         /* note:  i am using every 50th point, because it is far too slow for me to graph every point. */
        if ( coasttype.equals("LineString") && j > 0) { 
           //println (" latitude line from  " + coastdata.getJSONArray(j-1).getDouble(0) + " to " + coastdata.getJSONArray(j).getDouble(0));
-          earthArc(coastdata.getJSONArray(j-50).getFloat(1), coastdata.getJSONArray(j-50).getFloat(0), (float) 0, 
+          fastArc(coastdata.getJSONArray(j-50).getFloat(1), coastdata.getJSONArray(j-50).getFloat(0), (float) 0, 
                    coastdata.getJSONArray(j).getFloat(1), coastdata.getJSONArray(j).getFloat(0), (float) 0);
           //earthPoint(coastdata.getJSONArray(j).getFloat(1), coastdata.getJSONArray(j).getFloat(0), (float) 0);        
        }
@@ -403,24 +359,27 @@ void drawGlobe()
   if (greylineButton.getState() == true) 
   {
     stroke(128,128,128);
-    fill(128,128,128);
-    //noFill();
+    strokeWeight(8); 
+    noFill();
     ellipseMode(CENTER);
-    translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+//    translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
     ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
-    translate(0, 0, (+100 / kmPerPixel)); /* translate Z axis to 10km above surface*/
-    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
-    translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
-    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+//    translate(0, 0, (+100 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+//    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+ //   translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+//    ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
 
     /* plop a pseudo-sun above the earth */
-    noStroke();
+    stroke(128,128,128);
+    strokeWeight(2);   
     fill(128,128,128);
-    translate(0, 0, ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    
+    translate(0, 0, ((earthRadius + 20) / kmPerPixel)); /* translate Z axis to 10km above surface*/
+
     ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
     
     // OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
-    translate(0, 0, -2 * ((earthRadius + 10) / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    translate(0, 0, -2 * ((earthRadius + 20) / kmPerPixel)); /* translate Z axis to 10km above surface*/
     ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
     
     /* can I overwite with a transparant one to make it a little moon? 
@@ -463,17 +422,17 @@ void drawGlobe()
   fill(20);  
   stroke(255, 0, 0); 
   //earthPoint(90.0, 0, 300); earthPoint(90.0, 0, 600); earthPoint(90.0, 0, 900);
-  earthArc(90, 0, 0, 90, 0, 3000);
+  fastArc(90, 0, 0, 90, 0, 3000);
   stroke(0, 0, 255);
   //earthPoint(-90.0, 0, 300); earthPoint(-90.0, 0, 600); earthPoint(-90.0, 0, 900);
-  earthArc(-90, 0, 0, -90, 0, 3000);
+  fastArc(-90, 0, 0, -90, 0, 3000);
 
   if (coastlineButton.getState() == false) 
     return;
 
 
   /* mark the equator and +45 degrees north */
-  stroke(0, 180, 0, 64);
+  stroke(0, 180, 0, 128 * coastBright.getValue());
 
   /* mark the latitude lines 
    for (int lat = -80; lat <= 80; lat += 10)
@@ -493,7 +452,7 @@ void drawGlobe()
    
   for (int lat = -80; lat <= 80; lat += 10)
     for (int lon = -180; lon < 180; lon += 10)  
-      earthArc(lat, lon, 0, lat, lon+10, 0); 
+      fastArc(lat, lon, 0, lat, lon+10, 0); 
 
   /* mark the maridians   
   for (int lon = -170; lon <= 180; lon += 10)  
@@ -501,9 +460,10 @@ void drawGlobe()
   */ 
   /* better, mark each hour, which is every 15 degrees */
   for (int lon = -165; lon <= 180; lon += 15)  
-    earthArc(-90, lon, 0, 90, lon, 0);
+    fastArc(-90, lon, 0, 90, lon, 0);
   
-  stroke(0, 180, 0, 128);
+  stroke(0, 180, 0, 256 * coastBright.getValue());
+  
   drawCoastline();
   
 }
@@ -546,139 +506,11 @@ void drawText()
   
   text("hs1.getPos() = " + hs1.getPos(), textX, (textY += textYInc));
   
+  if (marks != null) { 
+    text(marks.size() + " marks", textX, (textY += textYInc));
+  }
   
   return;
-}
-
-void earthPoint(float latitude, float longitude, float altitude)
-{ 
-  /* challenge:  Draw something at a particular latitude, longitude, and altitude in km. */
-  pushMatrix(); 
-  rotateY( radians(longitude) ); /* must do Y axis first  */
-
-  rotateX( radians(latitude) );
-  translate(0, 0, ((earthRadius + altitude)/ kmPerPixel)); /* translate Z axis */
-  //sphereDetail(8);
-  //sphere(5); 
-  // box(2);
-  line(0, 0, 0, 0, 0, 40 / kmPerPixel); /* x1, y1, z1, x2, y2, z2 */
-
-  /* an X, fast but kind of ugly
-   {
-   line(-1,-1,0,1,1,0);
-   line(1,-1,0,-1,1,0);
-   }
-   */
-  popMatrix();
-}
-
-int earthArcLevel = 0; /* recursive level tracking variable to prevent stack overflow because I am a psychology minor, not a math minor */
-
-void earthArc(float latitude1, float longitude1, float altitude1, float latitude2, float longitude2, float altitude2)
-{
-  /* THIS IS BROKEN in many ways (but is working for a proof-of-concept)
-   FIXED: Need to find the great circle midpoint instead of the rectangular midpoint 
-   FIXED? Need to cross the -179 to 1 longitude path the short way 
-   FIXED: The lines are drawn crooked but it still looks pretty cool
-   FIXED: Altitude 2 is not considered
-   TODO:  Could use the cosine lookup table for performance
-   FIXED: There are 111 km per degree at the surface.  What at an altitude of 1500 miles? 
-   */
-  /* is there a midpoint between there and here? */
-  float midlat /* = (latitude1 + 90) + ((latitude2 + 90) - (latitude1 + 90)) / 2.0 - 90 */; 
-  float midlon /* = (longitude1 + 180) + ((longitude2 + 180) - (longitude1 + 180)) / 2.0 - 180 */;
-  float midalt = (altitude2 + altitude1) / 2.0;
-
-  /* from https://www.movable-type.co.uk/scripts/latlong.html : 
-   lat_rad/lon_rad for lati­tude/longi­tude in radian  */
-  double lat_rad1 = radians(latitude1);
-  double lat_rad2 = radians(latitude2);
-  double lon_rad1 = radians(longitude1);
-  double lon_rad2 = radians(longitude2);
-  double Bx = Math.cos(lat_rad2) * Math.cos(lon_rad2-lon_rad1);
-  double By = Math.cos(lat_rad2) * Math.sin(lon_rad2-lon_rad1);
-  double lat_rad3 = Math.atan2(Math.sin(lat_rad1) + Math.sin(lat_rad2), Math.sqrt( (Math.cos(lat_rad1)+Bx)*(Math.cos(lat_rad1)+Bx) + By*By ) );
-  double lon_rad3 = lon_rad1 + Math.atan2(By, Math.cos(lat_rad1) + Bx);
-
-  midlat=degrees((float)lat_rad3); 
-  midlon=degrees((float)lon_rad3);
-
-  while (midlon <= -180) midlon += 360; 
-  while (midlon > 180) midlon -= 360;  
-
-  /* TODO: change to haversine distance */
-
-  if (  (
-    abs(latitude2 - latitude1) < 3 
-    && 
-    (  
-    abs(longitude2 - longitude1) < 3
-    || abs((longitude2 + 360) - longitude1) < 3  /* this is not working :( */
-    || abs(longitude2 - (longitude1 + 360)) < 3
-    )
-    ) ||  earthArcLevel > 7 /* avoid runaway */)
-  {
-    /* don't draw a line across the international date line, because it's just not working. :( */
-    if (longitude2 > 170 && longitude1 < -170) return;
-    if (longitude1 > 170 && longitude2 < -170) return;
-
-    /* if the points are close in space, just draw a line, because the Earth is flat a short-range. */
-    pushMatrix(); 
-    rotateY( (float) lon_rad3 ); /* must do Y axis first, longitude  */
-
-    rotateX( (float) lat_rad3 );    /* latitude */
-    translate(0, 0, ((earthRadius + midalt)/ kmPerPixel)); /* translate Z axis */
-
-    float km_per_degree_latitude = 111.0 * ((earthRadius + midalt) / earthRadius);
-    float km_per_degree_longitude = 111.0 * ((earthRadius + midalt) / earthRadius) * (float) Math.cos(lat_rad3);
-
-    /* stroke(random(255)); */
-
-/*   This works very very well: */ 
-    line(
-      (longitude1 - midlon) * km_per_degree_longitude / kmPerPixel, 
-      (midlat - latitude1) * km_per_degree_latitude / kmPerPixel, 
-      (altitude1 - midalt) / kmPerPixel, 
-      (longitude2 - midlon) * km_per_degree_longitude / kmPerPixel, 
-      (midlat - latitude2) * km_per_degree_latitude / kmPerPixel, 
-      (altitude2 - midalt) / kmPerPixel // change this to just midalt for a cool effect 
-    );
-
-
-  
-  /*  -- shaded dashed lines and indicate direction.  
-    beginShape(LINES);
-    stroke(0);
-    vertex(
-          (longitude1 - midlon) * km_per_degree_longitude / kmPerPixel, 
-      (midlat - latitude1) * km_per_degree_latitude / kmPerPixel, 
-      (altitude1 - midalt) / kmPerPixel) ; 
-    stroke(200, 150);
-    vertex(
-      (longitude2 - midlon) * km_per_degree_longitude / kmPerPixel, 
-      (midlat - latitude2) * km_per_degree_latitude / kmPerPixel, 
-      (altitude2 - midalt) / kmPerPixel  );
-    endShape();
-*/
-
-    popMatrix();
-  } else /* not close enough for a straight line to look OK */
-  { 
-    /* just call myself twice with half the distance */
-    earthArcLevel++;
-    /* special case for the first call; go from ground level to space and back: 
-       eh, turns out this isn't so cool after all. commented out.
-    if (earthArcLevel == 1) 
-    { 
-    earthArc(latitude1, longitude1, 0, midlat, midlon, midalt); 
-    earthArc(midlat, midlon, midalt, latitude2, longitude2, 0);
-    } else {
-    */
-    earthArc(latitude1, longitude1, altitude1, midlat, midlon, midalt); 
-    earthArc(midlat, midlon, midalt, latitude2, longitude2, altitude2);
-    //}
-    earthArcLevel--;
-  }
 }
 
 int last_load_millis = 0;
@@ -763,7 +595,7 @@ void draw() {
  
 
 /* do any text processing before rotating the world. */
-  drawText();
+  if (showTextButton.getState()) drawText();
   
   translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);
@@ -771,8 +603,9 @@ void draw() {
 
   if (spinButton.getState()) 
   { 
-    viewpointY += ((millis() - last_spin_millis) / 30000.0);
+    viewpointY += ((millis() - last_spin_millis) / 2000.0) * (spinRate.getValue() - 0.5);
   }
+  
   last_spin_millis = millis(); 
   //0.01; 
    
@@ -783,15 +616,16 @@ void draw() {
   drawGlobe();
   
 
-  if (millis() > (last_load_millis + 100) && !mousePressed ) {
+  if (millis() > (last_load_millis + 100) && !loadingMarks ) {
     last_load_millis = millis(); 
 
-    if (updateButton.getState())
+    if (updateButton.getState() || marks == null)
     { 
       /* increment input times to DB query by 2 minutes */
       beginDate = new Date(beginDate.getTime() + 2 * (1000 * 60) );  // Java time is in milliseconds  
       endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );   
-      loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
+ //     loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
+      thread("loadMarks"); 
     }  
   }
 
@@ -802,11 +636,12 @@ void draw() {
   // Notice how we are looping through the ArrayList backwards
   // This is because we are deleting elements from the list  
 
-
-  for (int i = 0; i < marks.size(); i++) { 
-    // An ArrayList doesn't know what it is storing so we have to cast the object coming out
-    Mark mark = marks.get(i);
-    mark.display();
+  if (marks != null && showMarksButton.getState()) { 
+    for (int i = 0; i < marks.size(); i++) { 
+      // An ArrayList doesn't know what it is storing so we have to cast the object coming out
+      Mark mark = marks.get(i);
+      mark.display();
+    }
   }
    
 }
