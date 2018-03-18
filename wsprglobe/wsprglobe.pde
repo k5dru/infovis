@@ -115,7 +115,13 @@ class Mark {
     }
     
     strokeWeight(1); 
-    earthArc(lat1, lon1, alt1, lat2, lon2, alt2); 
+    earthArc(lat1, lon1, txAltitudeButton.getState() ? 1000 : 10, lat2, lon2, 10);  /* 10km high to make sure the marks aren't obscured by other globe marks */
+    if (txGlyphButton.getState()) { 
+       /* draw a rough triangle around the transmit site */ 
+       fastArc(lat1 + 0.4, lon1,  txAltitudeButton.getState() ? 1000 : 10, lat1-0.4, lon1+0.6, txAltitudeButton.getState() ? 1000 : 10);
+       fastArc(lat1-0.4, lon1+0.6,  txAltitudeButton.getState() ? 1000 : 10, lat1-0.4, lon1-0.6, txAltitudeButton.getState() ? 1000 : 10);
+       fastArc(lat1-0.4, lon1-0.6,  txAltitudeButton.getState() ? 1000 : 10, lat1 + 0.4, lon1, txAltitudeButton.getState() ? 1000 : 10);      
+    }
   }
 }
 
@@ -655,6 +661,11 @@ void draw() {
 
     if (updateButton.getState() || marks == null)
     { 
+      if (endDate.getTime() > max_observationtime.getTime())
+      { 
+        beginDate = min_observationtime;  
+        endDate = min_observationtime;  
+      }
       /* increment input times to DB query by 2 minutes */
       beginDate = new Date(beginDate.getTime() + (int) (timePerUpdate.getValue() * 60) * (1000 * 60) );  // Java time is in milliseconds  
       endDate = new Date(beginDate.getTime() + (int) (observationWindow.getValue() * 15) * (1000 * 60) );   

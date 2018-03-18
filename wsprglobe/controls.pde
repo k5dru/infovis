@@ -14,6 +14,8 @@ boolButton sunPointButton;
 boolButton showControlsButton;
 boolButton showMarksButton;
 boolButton showTextButton;
+boolButton txAltitudeButton;
+boolButton txGlyphButton;
 
 void setupControls() 
 { 
@@ -44,7 +46,7 @@ void setupControls()
 
   spinRate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
   spinRate.setValue(0.6);
-  
+
   coastlineButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   coastlineButton.setNominalValue("Show Coastlines");
   coastlineButton.setState(false);
@@ -75,6 +77,14 @@ void setupControls()
 
   observationWindow = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
 
+  txAltitudeButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  txAltitudeButton.setNominalValue("Transmitter Has Altitude");
+  txAltitudeButton.setState(false);
+
+  txGlyphButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  txGlyphButton.setNominalValue("Transmitter Has Glyph");
+  txGlyphButton.setState(false);
+
 }  
 
 void updateControls() 
@@ -102,7 +112,7 @@ void updateControls()
 
     coastlineButton.update(); 
     coastlineButton.display();
-    
+
     coastBright.update();
     coastBright.setNominalValue("Coast Brightness: " + round(coastBright.getValue() * 100) + "%" );
     coastBright.display();
@@ -115,13 +125,13 @@ void updateControls()
     lightBright.setNominalValue("Light Brightness: " + round(lightBright.getValue() * 100) + "%" );
     lightBright.display();
 
-    
+
     spinButton.update(); 
     spinButton.display();
 
     updateButton.update(); 
     updateButton.display();
-    
+
     updateRate.update();
     updateRate.setNominalValue("Update Rate: " + (int)(updateRate.getValue() * 1000) + "ms" );
     updateRate.display();
@@ -133,9 +143,16 @@ void updateControls()
     observationWindow.update();
     observationWindow.setNominalValue("Observation Window: " + (int) (observationWindow.getValue() * 15) + " minutes" );
     observationWindow.display();
-    
+
     sunPointButton.update(); 
     sunPointButton.display();
+
+    txAltitudeButton.update();
+    txAltitudeButton.display();
+
+    txGlyphButton.update();
+    txGlyphButton.display();
+
   }
 }
 
@@ -161,8 +178,9 @@ class HScrollbar {
   boolean over;           // is the mouse over the slider?
   boolean locked;
   float ratio;
-  String nominalvalue = "";    /* james: what, if anything, to display over the slider? */ 
- // float value;                /* james:  make this go from 0.0 to 1.0 based on spos */ 
+  String nominalvalue = "";    /* james: what, if anything, to display over the slider? */
+
+  // float value;                /* james:  make this go from 0.0 to 1.0 based on spos */ 
 
   /* float xposition, float yposition, int swidth, int sheight, int lethargy */
   HScrollbar (float xp, float yp, int sw, int sh, int l) {
@@ -182,7 +200,8 @@ class HScrollbar {
   void update() {
     if (overEvent()) {
       over = true;
-    } else {      over = false;
+    } else {      
+      over = false;
     }
     if (mousePressed && over) {
       locked = true;
@@ -250,7 +269,7 @@ class HScrollbar {
   }
 
   void setValue(float f) {
-    newspos = sposMin + (sposMax - sposMin) * min(1.0, max(f,0.0));
+    newspos = sposMin + (sposMax - sposMin) * min(1.0, max(f, 0.0));
   }
 }
 
