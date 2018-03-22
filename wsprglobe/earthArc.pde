@@ -1,25 +1,57 @@
 
-void earthPoint(float latitude, float longitude, float altitude)
+void drawGlyph(int glyphType)
+{
+  if (glyphType == 1) {  /* circle */
+   ellipseMode(CENTER);
+    noFill();
+    float roughSize = 130 / kmPerPixel; // was 100
+    ellipse(0, 0, roughSize, roughSize);
+  }  
+  else if (glyphType == 2) {  /*  an X, fast but kind of ugly */
+    float roughSize = 40 / kmPerPixel;
+    line(-roughSize,-roughSize,0,roughSize,roughSize,0);
+    line(roughSize,-roughSize,0,-roughSize,roughSize,0);
+  }  
+  else if (glyphType == 3) {  /*  a rough triangle - sorry for lack of precise math */
+     float roughSize = 70 / kmPerPixel;
+     line( 0, -roughSize,      0,   -roughSize*0.9, roughSize*0.5,    0);
+     line( -roughSize*0.9, roughSize*0.5,      0,   +roughSize*0.9, roughSize*0.5,    0);
+     line( +roughSize*0.9, roughSize*0.5,      0,    0, -roughSize,    0);
+  } 
+  else if (glyphType == 4) {  /* a sun position indicator, two concentric circles */
+    ellipseMode(CENTER);
+    noFill();
+    float roughSize = 250 / kmPerPixel; 
+    ellipse(0, 0, roughSize, roughSize);
+    roughSize = 150 / kmPerPixel; 
+    ellipse(0, 0, roughSize, roughSize);
+  }
+  else if (glyphType == 5) {  /* an anti-sun position indicator, crossed out */
+    ellipseMode(CENTER);
+    noFill();
+    float roughSize = 250 / kmPerPixel; 
+    ellipse(0, 0, roughSize, roughSize);
+    roughSize = 150 / kmPerPixel; 
+    ellipse(0, 0, roughSize, roughSize);
+    roughSize *= 0.62;
+    line(-roughSize,-roughSize,0,roughSize,roughSize,0);
+    line(roughSize,-roughSize,0,-roughSize,roughSize,0);
+  }
+}
+
+void earthGlyph(float latitude, float longitude, float altitude, int glyphType)
 { 
-  /* challenge:  Draw something at a particular latitude, longitude, and altitude in km. */
+  /* challenge:  Draw a shape at a particular latitude, longitude, and altitude in km. */
   pushMatrix(); 
   rotateY( radians(longitude) ); /* must do Y axis first  */
-
   rotateX( radians(latitude) );
   translate(0, 0, ((earthRadius + altitude)/ kmPerPixel)); /* translate Z axis */
-  //sphereDetail(8);
-  //sphere(5); 
-  // box(2);
-  line(0, 0, 0, 0, 0, 40 / kmPerPixel); /* x1, y1, z1, x2, y2, z2 */
 
-  /* an X, fast but kind of ugly
-   {
-   line(-1,-1,0,1,1,0);
-   line(1,-1,0,-1,1,0);
-   }
-   */
+  drawGlyph(glyphType); 
+
   popMatrix();
 }
+
 
 int earthArcLevel = 0; /* recursive level tracking variable to prevent stack overflow because I am not a math major */
 

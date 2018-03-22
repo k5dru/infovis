@@ -60,3 +60,21 @@ group by quality_quartile;
 
 select * from wspr where distance_km between 2100 and 2200 
 limit 1000;
+
+/* determine frequency distribution */ 
+ select n, max(frequency) from ( select ntile(100) over (order by frequency) as n, frequency from (select frequency from  wspr) data ) datan group by n order by n;
+
+/*  interesting results (remember this is December 2017 data) :
+
+    10: 0.475
+    11: 1.83 
+    18: 3.57
+about a third are under 5
+    29: 5.28
+    31: 7.04
+    69: 10.14
+about two thirds are under 10
+    83: 14.09
+    99: 21.09  
+
+*/

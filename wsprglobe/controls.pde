@@ -1,4 +1,7 @@
 HScrollbar hs1; 
+HScrollbar zoom;  
+HScrollbar markBright;  
+HScrollbar markWeight;  
 HScrollbar spinRate;  
 HScrollbar updateRate;  
 HScrollbar timePerUpdate;  
@@ -16,6 +19,8 @@ boolButton showMarksButton;
 boolButton showTextButton;
 boolButton txAltitudeButton;
 boolButton txGlyphButton;
+boolButton colorFreqButton;
+boolButton colorDriftButton;
 
 void setupControls() 
 { 
@@ -32,9 +37,34 @@ void setupControls()
   showControlsButton.setNominalValue("Show Controls");
   showControlsButton.setState(true);
 
+  zoom = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  zoom.setValue(0.5);
+
   showMarksButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showMarksButton.setNominalValue("Show Marks");
   showMarksButton.setState(false);
+
+  markBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  markBright.setValue(0.21);
+
+  markWeight = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  markWeight.setValue(0.2);
+
+  txAltitudeButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  txAltitudeButton.setNominalValue("Transmitter Has Altitude");
+  txAltitudeButton.setState(false);
+
+  txGlyphButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  txGlyphButton.setNominalValue("Tx/Rx Glyphs");
+  txGlyphButton.setState(false);
+
+  colorFreqButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  colorFreqButton.setNominalValue("Color by Frequency");
+  colorFreqButton.setState(false);
+  
+  colorDriftButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  colorDriftButton.setNominalValue("Color by Drift");
+  colorDriftButton.setState(false);
 
   showTextButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showTextButton.setNominalValue("Show Text");
@@ -72,18 +102,12 @@ void setupControls()
   updateButton.setState(false);
 
   updateRate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  updateRate.setValue(0.25);
 
   timePerUpdate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+  timePerUpdate.setValue(0.45);
 
   observationWindow = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-
-  txAltitudeButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
-  txAltitudeButton.setNominalValue("Transmitter Has Altitude");
-  txAltitudeButton.setState(false);
-
-  txGlyphButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
-  txGlyphButton.setNominalValue("Transmitter Has Glyph");
-  txGlyphButton.setState(false);
 
 }  
 
@@ -100,12 +124,24 @@ void updateControls()
     hs1.setNominalValue(dateFormat.format(endDate));
     hs1.display();
 
+    zoom.update();
+    zoom.setNominalValue("km Per Pixel: " +  kmPerPixel );
+    zoom.display();
+
     spinRate.update();
     spinRate.setNominalValue("Spin Rate: " + round(spinRate.getValue() * 100) + "%" );
     spinRate.display();
 
     showMarksButton.update(); 
     showMarksButton.display();
+
+    markBright.update();
+    markBright.setNominalValue("Mark Brightness: " + round(markBright.getValue() * 100) + "%" );
+    markBright.display();
+
+    markWeight.update();
+    markWeight.setNominalValue("Mark Weight: " + round(markWeight.getValue() * 500) + "%" );
+    markWeight.display();
 
     showTextButton.update(); 
     showTextButton.display();
@@ -152,6 +188,22 @@ void updateControls()
 
     txGlyphButton.update();
     txGlyphButton.display();
+
+    colorFreqButton.update();
+    colorFreqButton.display();
+    // color by frequency and drift are mutually exclusive
+    if (colorFreqButton.getState()) 
+    {
+      colorDriftButton.setState(false);
+    }
+
+    colorDriftButton.update();
+    colorDriftButton.display();
+
+    if (colorDriftButton.getState()) 
+    {
+      colorFreqButton.setState(false);
+    }
 
   }
 }
