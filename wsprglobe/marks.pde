@@ -1,3 +1,84 @@
+/* database connection: */
+
+import de.bezier.data.sql.*;    
+PostgreSQL pgsql;
+
+void setupDatabase()
+{ 
+  /* thanks to  fjenett 20081129 */
+  /* make database connection */
+  String user     = "lemley";
+  String pass     = "InfoVisIsAwesome";
+
+  // name of the database to use
+  //
+  String database = "lemley";
+
+  // connect to database on "localhost"
+  //
+  pgsql = new PostgreSQL( this, "localhost", database, user, pass );
+
+  // connected?
+  if ( pgsql.connect() )
+  {
+
+    // now let's query for last 10 entries in "weather"
+    pgsql.query( "SELECT * FROM wspr limit 2" );
+
+    // anything found?
+    while ( pgsql.next() )
+    {
+      println(" *** new row *** "); 
+      // splendid, here's what we've found ..
+      println( pgsql.getString("observationtime") );  //| timestamp with time zone | 
+      println( pgsql.getTimestamp("observationtime") );  //| timestamp with time zone | 
+      println( pgsql.getFloat("tx_latitude") );      //| real                     | 
+      println( pgsql.getFloat("tx_longitude") );     //| real                     | 
+      println( pgsql.getFloat("rx_latitude") );      //| real                     | 
+      println( pgsql.getFloat("rx_longitude") );     //| real                     | 
+      println( pgsql.getString("tx_call") );          //| character varying(12)    | 
+      println( pgsql.getString("tx_grid") );          //| character varying(6)     | 
+      println( pgsql.getString("rx_call") );          //| character varying(12)    | 
+      println( pgsql.getString("rx_grid") );          //| character varying(6)     | 
+      println( pgsql.getInt("distance_km") );      //| smallint                 | 
+      println( pgsql.getInt("azimuth") );          //| smallint                 | 
+      println( pgsql.getInt("tx_dbm") );           //| smallint                 | 
+      println( pgsql.getInt("rx_snr") );           //| smallint                 | 
+      println( pgsql.getFloat("frequency") );        //| real                     | 
+      println( pgsql.getInt("drift") );            //| smallint                 | 
+      println( pgsql.getFloat("quality") );          //| real                     | 
+      println( pgsql.getInt("quality_quartile") ); //| smallint                 |
+    }
+  } else
+  {
+    // yay, connection failed !
+    println ("postgresql connection failed.");
+  }
+
+  /* while we're in the data, get the min and max observation times */
+  pgsql.query( "select min(observationtime) as min_observationtime, max(observationtime) as max_observationtime from wspr" );
+  if ( pgsql.next() ) { 
+    println( pgsql.getString("min_observationtime") );
+    println( pgsql.getString("max_observationtime") );
+  }
+
+  /* using an actual date instead of minutes-since-december-1 */
+  try {
+    beginDate = dateFormat.parse("2017-12-01 08:48:00 -0000");  /* many marks at this time */
+    //    min_observationtime = dateFormat.parse(pgsql.getString("min_observationtime"));
+    //    max_observationtime = dateFormat.parse(pgsql.getString("max_observationtime"));
+    min_observationtime = dateFormat.parse("2017-11-30 18:00:00 -0600");
+    max_observationtime = dateFormat.parse("2017-12-31 18:00:00 -0600");
+    println(beginDate);
+    println(dateFormat.format(beginDate));
+    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );  /* time is in milliseconds */
+
+    println(dateFormat.format(endDate));
+  } 
+  catch (ParseException e) {
+    e.printStackTrace();
+  }
+}
 
 /* https://processing.org/examples/arraylistclass.html */
 class Mark {

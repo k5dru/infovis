@@ -2,8 +2,8 @@
 /* TODO:
  
  Sliders for:  
- minutes old observations
- update rate
+ done: minutes old observations
+ done: update rate
  DONE: spin rate
  quality of observations 
  received strength of observations 
@@ -11,15 +11,15 @@
  filter for signals that are new, not seen in a few hours
  filter for signals that are just barely perceptable 
  different marks for really strong signals - maybe arrows or hashes or something. 
- distinguish midnight sun point from midday sun point
+ done: distinguish midnight sun point from midday sun point
  more precise time control, with time spinner 
- identify transmitters by glyph
+ done: identify transmitters by glyph
  
- sloppyarc vs. precisionarc.  Use sloppyarc for coastlines.
+ done: sloppyarc vs. precisionarc.  Use sloppyarc for coastlines.
  
  Legend for drift or band.
  
- Consider this as a mechanism to indicate direction: 
+ Done; didn't like: Consider this as a mechanism to indicate direction: 
  beginShape(LINES);
  stroke(0);
  vertex(x, y, z);
@@ -27,14 +27,13 @@
  vertex(xb, yb, zb);
  endShape();
  
- Need to add "setpos" method for slider, 
- TOdo:  it appears to be setting "spos" but the slider is never changing position. Why? 
+ Done: Need to add "setpos" method for slider, 
  
  Todo:  click-mouse-wheel should single-step through the data forwards or backwards. 
  
- Need controls for time, observation window, various filters (quality, country, etc.)
+done:  Need controls for time, observation window, various filters (quality, country, etc.)
  
- Need controls for brightness/contrast
+done:  Need controls for brightness/contrast
  
  DONE: Need booleans to turn on and off different features, such as coastline, greyline, etc.
  
@@ -42,12 +41,14 @@
  
  Set km_per_pixel based on screen size, and use the fullscreen call to make the screen fullscreen
  
- normalize latitude not using a loop
+tried; doesn't matter:  normalize latitude not using a loop
  
- DONE:  update value of endDate based on hs1.getPos(); 
+DONE:  update value of endDate based on hs1.getPos(); 
  as a fraction between   pgsql.getString("min_observationtime") and getString("max_observationtime") ); 
  
- 
+Consider making arcs "PSHape" objects 
+Consider making coastline a "PShape" object instead of setting up each frame
+  except can't call translate or rotate from within a shape object? 
  
  */
 
@@ -65,16 +66,13 @@ float kmPerPixel = 20 ; /* 15 is realistic minium, 30 is realistic maximum */
 float prevKmPerPixel = kmPerPixel; /* to know when this has changed */
 
 
-JSONObject json_coastline;
+
 
 void settings()
 { 
   size(1280, 850, P3D);
 }
 
-/* database connection: */
-import de.bezier.data.sql.*;    
-PostgreSQL pgsql;
 
 /* for SimpleDateFormat, from http://www.java2s.com/Tutorial/Java/0040__Data-Type/SimpleDateFormat.htm */
 import java.text.SimpleDateFormat;
@@ -127,127 +125,11 @@ void setup() {
 
   setupControls(); 
 
-  /* thanks to  fjenett 20081129 */
-  /* make database connection */
-  String user     = "lemley";
-  String pass     = "InfoVisIsAwesome";
+  setupDatabase();
 
-  // name of the database to use
-  //
-  String database = "lemley";
+  setupCoastline();
 
-  // connect to database on "localhost"
-  //
-  pgsql = new PostgreSQL( this, "localhost", database, user, pass );
-
-  // connected?
-  if ( pgsql.connect() )
-  {
-
-    // now let's query for last 10 entries in "weather"
-    pgsql.query( "SELECT * FROM wspr limit 2" );
-
-    // anything found?
-    while ( pgsql.next() )
-    {
-      println(" *** new row *** "); 
-      // splendid, here's what we've found ..
-      println( pgsql.getString("observationtime") );  //| timestamp with time zone | 
-      println( pgsql.getTimestamp("observationtime") );  //| timestamp with time zone | 
-      println( pgsql.getFloat("tx_latitude") );      //| real                     | 
-      println( pgsql.getFloat("tx_longitude") );     //| real                     | 
-      println( pgsql.getFloat("rx_latitude") );      //| real                     | 
-      println( pgsql.getFloat("rx_longitude") );     //| real                     | 
-      println( pgsql.getString("tx_call") );          //| character varying(12)    | 
-      println( pgsql.getString("tx_grid") );          //| character varying(6)     | 
-      println( pgsql.getString("rx_call") );          //| character varying(12)    | 
-      println( pgsql.getString("rx_grid") );          //| character varying(6)     | 
-      println( pgsql.getInt("distance_km") );      //| smallint                 | 
-      println( pgsql.getInt("azimuth") );          //| smallint                 | 
-      println( pgsql.getInt("tx_dbm") );           //| smallint                 | 
-      println( pgsql.getInt("rx_snr") );           //| smallint                 | 
-      println( pgsql.getFloat("frequency") );        //| real                     | 
-      println( pgsql.getInt("drift") );            //| smallint                 | 
-      println( pgsql.getFloat("quality") );          //| real                     | 
-      println( pgsql.getInt("quality_quartile") ); //| smallint                 |
-    }
-  } else
-  {
-    // yay, connection failed !
-    println ("postgresql connection failed.");
-  }
-
-  /* while we're in the data, get the min and max observation times */
-  pgsql.query( "select min(observationtime) as min_observationtime, max(observationtime) as max_observationtime from wspr" );
-  if ( pgsql.next() ) { 
-    println( pgsql.getString("min_observationtime") );
-    println( pgsql.getString("max_observationtime") );
-  }
-
-  /* using an actual date instead of minutes-since-december-1 */
-  try {
-    beginDate = dateFormat.parse("2017-12-01 08:48:00 -0000");  /* many marks at this time */
-    //    min_observationtime = dateFormat.parse(pgsql.getString("min_observationtime"));
-    //    max_observationtime = dateFormat.parse(pgsql.getString("max_observationtime"));
-    min_observationtime = dateFormat.parse("2017-11-30 18:00:00 -0600");
-    max_observationtime = dateFormat.parse("2017-12-31 18:00:00 -0600");
-    println(beginDate);
-    println(dateFormat.format(beginDate));
-    endDate = new Date(beginDate.getTime() + 5 * (1000 * 60) );  /* time is in milliseconds */
-
-    println(dateFormat.format(endDate));
-  } 
-  catch (ParseException e) {
-    e.printStackTrace();
-  }
-
-
-
-
-  // load JSON coastline, converted from ne_10m_admin_0_boundary_lines_land with https://geoconverter.hsr.ch/
-  // bah, that's not the right one. 
-  //json_coastline = loadJSONObject("ne_10m_admin_0_boundary_lines_land.geojson");
-  json_coastline = loadJSONObject("ne_10m_coastline_rp.geojson");
-
-  /* example data: 
-   type": "FeatureCollection",
-   "features": [
-   type": "LineString", "coordinates": [ [ -124.758865926999945, 48.494017843000037 ], [ -124.582855997999928, 48.443917542000023 ], [ 
-   type": "LineString", "coordinates": [ [ 11.437510613506703, 58.991720862705662 ], [ 11.400936726000083, 59.025907288000028 ], [ 11.3
-   type": "MultiLineString", "coordinates": [ [ [ 8.394091838000094, 55.096328024000016 ], [ 8.452382853000131, 55.071471660000057 ], [
-   */
 }
-
-void drawCoastline()
-{ 
-  strokeWeight(2);
-
-  /* with thanks to https://forum.processing.org/one/topic/how-to-read-geojson-data.html */
-  JSONArray coasts = json_coastline.getJSONArray("features"); 
-  for (int i = 0; i < coasts.size(); i++) { 
-    String coasttype = (coasts.getJSONObject(i).getJSONObject("geometry").getString("type"));
-    JSONArray coastdata = coasts.getJSONObject(i).getJSONObject("geometry").getJSONArray("coordinates");
-    for (int j = 0; j < coastdata.size(); j+=50) { 
-      /* note:  i am using every 50th point, because it is far too slow for me to graph every point. */
-      if ( coasttype.equals("LineString") && j > 0) { 
-        //println (" latitude line from  " + coastdata.getJSONArray(j-1).getDouble(0) + " to " + coastdata.getJSONArray(j).getDouble(0));
-        fastArc(coastdata.getJSONArray(j-50).getFloat(1), coastdata.getJSONArray(j-50).getFloat(0), (float) 0, 
-          coastdata.getJSONArray(j).getFloat(1), coastdata.getJSONArray(j).getFloat(0), (float) 0);
-        //earthPoint(coastdata.getJSONArray(j).getFloat(1), coastdata.getJSONArray(j).getFloat(0), (float) 0);
-      }
-
-      /* the boundry set hat MultiLineString; this is what I did with that set:        
-       if ( coasttype.equals("MultiLineString") ) { 
-       //println (" latitude line from  " + coastdata.getJSONArray(j-1).getDouble(0) + " to " + coastdata.getJSONArray(j).getDouble(0));
-       for (int k = 1; k < coastdata.getJSONArray(j).size(); k++) { 
-       earthArc(coastdata.getJSONArray(j).getJSONArray(k-1).getFloat(1), coastdata.getJSONArray(j).getJSONArray(k-1).getFloat(0), (float) 0, 
-       coastdata.getJSONArray(j).getJSONArray(k).getFloat(1), coastdata.getJSONArray(j).getJSONArray(k).getFloat(0), (float) 0);
-       }         
-       }
-       */
-    }
-  }
-} 
 
 
 void drawGlobe()

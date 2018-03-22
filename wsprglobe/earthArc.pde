@@ -33,7 +33,8 @@ void drawGlyph(int glyphType)
     ellipse(0, 0, roughSize, roughSize);
     roughSize = 150 / kmPerPixel; 
     ellipse(0, 0, roughSize, roughSize);
-    roughSize *= 0.62;
+    //roughSize *= 0.62;
+    roughSize *= 0.8;
     line(-roughSize,-roughSize,0,roughSize,roughSize,0);
     line(roughSize,-roughSize,0,-roughSize,roughSize,0);
   }
