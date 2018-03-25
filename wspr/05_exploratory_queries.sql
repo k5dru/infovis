@@ -1,3 +1,15 @@
+/* check for calls in my grid */ 
+
+select * from ( 
+select w.*, row_number() over (partition by tx_call order by observationtime) as call_observation
+from wspr w 
+where substr(rx_grid,1,4) = 'EM35'
+) d 
+where call_observation = 1 
+order by observationtime
+;
+
+
 /* visualize clusters by hour, animated, https://guides.library.duke.edu/tableau/tableau_animated_map */
 select
 date_Trunc('DAY', observationtime) as utc_day,
@@ -76,5 +88,5 @@ about a third are under 5
 about two thirds are under 10
     83: 14.09
     99: 21.09  
-
 */
+

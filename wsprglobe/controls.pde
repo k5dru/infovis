@@ -21,6 +21,9 @@ boolButton txAltitudeButton;
 boolButton txGlyphButton;
 boolButton colorFreqButton;
 boolButton colorDriftButton;
+boolButton showLegend;
+
+boolean debugText = false; 
 
 void setupControls() 
 { 
@@ -35,17 +38,17 @@ void setupControls()
 
   showControlsButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showControlsButton.setNominalValue("Show Controls");
-  showControlsButton.setState(true);
+  showControlsButton.setState(false);
 
   zoom = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
   zoom.setValue(0.5);
 
   showMarksButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
-  showMarksButton.setNominalValue("Show Marks");
+  showMarksButton.setNominalValue("Show Arcs");
   showMarksButton.setState(false);
 
   markBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-  markBright.setValue(0.21);
+  markBright.setValue(0.45);
 
   markWeight = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
   markWeight.setValue(0.2);
@@ -58,14 +61,14 @@ void setupControls()
   txGlyphButton.setNominalValue("Tx/Rx Glyphs");
   txGlyphButton.setState(false);
 
-  colorFreqButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
-  colorFreqButton.setNominalValue("Color by Frequency");
-  colorFreqButton.setState(false);
-  
   colorDriftButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   colorDriftButton.setNominalValue("Color by Drift");
   colorDriftButton.setState(false);
 
+  colorFreqButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  colorFreqButton.setNominalValue("Color by Frequency");
+  colorFreqButton.setState(false);
+  
   showTextButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showTextButton.setNominalValue("Show Text");
   showTextButton.setState(false);
@@ -105,15 +108,23 @@ void setupControls()
   updateRate.setValue(0.25);
 
   timePerUpdate = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-  timePerUpdate.setValue(0.45);
+  timePerUpdate.setValue(0.56);
 
   observationWindow = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
 
+  showLegend = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  showLegend.setNominalValue("Show Legend");
+  showLegend.setState(false);
+
 }  
+
+
 
 void updateControls() 
 { 
   /* update controls that need updating */
+
+  processPresets();
 
   strokeWeight(2);
   showControlsButton.update(); 
@@ -129,7 +140,7 @@ void updateControls()
     zoom.display();
 
     spinRate.update();
-    spinRate.setNominalValue("Spin Rate: " + round(spinRate.getValue() * 100) + "%" );
+    spinRate.setNominalValue("Spin Rate: " + (-100 + round(spinRate.getValue() * 200)) + "%" );
     spinRate.display();
 
     showMarksButton.update(); 
@@ -173,7 +184,7 @@ void updateControls()
     updateRate.display();
 
     timePerUpdate.update();
-    timePerUpdate.setNominalValue("Increment Per Update: " + (int) (timePerUpdate.getValue() * 60) + " minutes" );
+    timePerUpdate.setNominalValue("Increment Per Update: " + (-60 + (int) (timePerUpdate.getValue() * 120)) + " minutes" );
     timePerUpdate.display();
 
     observationWindow.update();
@@ -205,7 +216,82 @@ void updateControls()
       colorFreqButton.setState(false);
     }
 
+    showLegend.update(); 
+    showLegend.display();
+
   }
+}
+
+
+void processPresets()
+{ 
+  if (keyPressed && key == 'd')   // turn on debug text 
+    debugText = !debugText; 
+
+  if (keyPressed && key == 'a')   // a rather frenetic display, useful for seeing that moving dude
+  {
+    //debugText = true;
+    showControlsButton.setState(true);
+    //zoom.setValue(0.7054);
+    showMarksButton.setState(true);
+    markBright.setValue(0.65);
+    markWeight.setValue(0.2);
+    txAltitudeButton.setState(false);
+    txGlyphButton.setState(true);
+    colorDriftButton.setState(false);
+    colorFreqButton.setState(true);
+    showTextButton.setState(true);
+    spinButton.setState(false);
+    spinRate.setValue(0.6);
+    coastlineButton.setState(true);
+    coastBright.setValue(0.38);
+    lightBright.setValue(1);
+    sunPointButton.setState(true);
+    greylineButton.setState(true);
+    updateButton.setState(true);
+    updateRate.setValue(8.515e-9);
+    timePerUpdate.setValue(0.893);
+    observationWindow.setValue(0.2232);
+    showLegend.setState(false);
+  }
+
+  if (keyPressed && key == 's')    // slowed down so that every mark is visible 
+  {
+    spinButton.setState(true);
+    spinRate.setValue(0.5178571);
+    spinRate.setValue(0.5089285);  // very slow
+    updateRate.setValue(0.196);
+    updateRate.setValue(1);        // very slow
+    timePerUpdate.setValue(0.5089285);
+    observationWindow.setValue(0.5714285); // 8 minutes 
+  }    
+
+  if (keyPressed && key == 'f')    // defaults 
+  {
+    showControlsButton.setState(false);
+    zoom.setValue(0.5);
+    showMarksButton.setState(false);
+    markBright.setValue(0.45);
+    markWeight.setValue(0.2);
+    txAltitudeButton.setState(false);
+    txGlyphButton.setState(false);
+    colorDriftButton.setState(false);
+    colorFreqButton.setState(false);
+    showTextButton.setState(false);
+    spinButton.setState(false);
+    spinRate.setValue(0.6);
+    coastlineButton.setState(false);
+    coastBright.setValue(0.7);
+    lightBright.setValue(0.7);
+    sunPointButton.setState(false);
+    greylineButton.setState(false);
+    updateButton.setState(false);
+    updateRate.setValue(0.25);
+    timePerUpdate.setValue(0.56);
+    showLegend.setState(false);
+    debugText = false;
+  }
+
 }
 
 

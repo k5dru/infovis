@@ -40,8 +40,8 @@ void setupDatabase()
       println( pgsql.getString("tx_grid") );          //| character varying(6)     | 
       println( pgsql.getString("rx_call") );          //| character varying(12)    | 
       println( pgsql.getString("rx_grid") );          //| character varying(6)     | 
-      println( pgsql.getInt("distance_km") );      //| smallint                 | 
-      println( pgsql.getInt("azimuth") );          //| smallint                 | 
+      // println( pgsql.getInt("distance_km") );      //| smallint                 | 
+      // println( pgsql.getInt("azimuth") );          //| smallint                 | 
       println( pgsql.getInt("tx_dbm") );           //| smallint                 | 
       println( pgsql.getInt("rx_snr") );           //| smallint                 | 
       println( pgsql.getFloat("frequency") );        //| real                     | 
@@ -95,8 +95,10 @@ class Mark {
   int alpha;
   float freq;
   int cr, cg, cb;
+  String tx_call; 
+  String rx_call;
 
-  Mark(float a, float b, float c, float d, float e, float f, int g, int h, int i, float j) { 
+  Mark(float a, float b, float c, float d, float e, float f, int g, int h, int i, float j, String tc, String rc) { 
     lat1=a;
     lon1=b;
     alt1=c;
@@ -113,7 +115,8 @@ class Mark {
       alpha = 0; 
     }
  
-
+    tx_call = tc;
+    rx_call = rc;
 }
   
   void display() { 
@@ -155,9 +158,9 @@ class Mark {
 
     if (txGlyphButton.getState()) { 
        /* draw a rough triangle around the transmit site */
-      earthGlyph(lat1, lon1, txAltitudeButton.getState() ? 1000 : 10, 3);
+      earthGlyph(lat1, lon1, txAltitudeButton.getState() ? 1000 : 10, 3, tx_call);
        /* and a circle around the receive site */
-      earthGlyph(lat2, lon2,  10, 1);
+      earthGlyph(lat2, lon2,  10, 1, rx_call);
     }
   }
 }
@@ -179,13 +182,20 @@ void loadMarks() {
   newMarks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
 
   pgsql.query(""
-+"  select tx_latitude, tx_longitude, rx_latitude "
-+" , rx_longitude, distance_km, quality_quartile, drift, frequency  "
-+" , extract(MINUTES from ('" + dateFormat.format(endDate) + "'::timestamp - observationtime)) as observation_age"
++" select tx_call "
++", tx_latitude"
++",  tx_longitude"
++", rx_call"
++", rx_latitude"
++" , rx_longitude"
++" , quality_quartile, drift, frequency"
++" , extract(MINUTES from ('" + dateFormat.format(endDate) + "'::timestamp with time zone - observationtime)) as observation_age"
++" , tx_call, rx_call "
 +"  from wspr       "
-+"  where observationtime between '" + dateFormat.format(beginDate) + "'::timestamp"
-+"                            and '" + dateFormat.format(endDate) + "'::timestamp"
-+"  and quality_quartile = 4 and rx_snr < -18 "
++"  where observationtime between '" + dateFormat.format(beginDate) + "'::timestamp with time zone"
++"                            and '" + dateFormat.format(endDate) + "'::timestamp with time zone"
++" and quality_quartile = 4" 
++" and rx_snr < -22 "  /* mode is -22, mean is -14.5 */
 //+"  order by random() limit 100           "
   );
      
@@ -204,13 +214,14 @@ void loadMarks() {
         pgsql.getInt("quality_quartile"), 
         pgsql.getInt("drift"), 
         pgsql.getInt("observation_age"),
-        pgsql.getInt("frequency") 
+        pgsql.getInt("frequency"),
+        pgsql.getString("tx_call"),
+        pgsql.getString("rx_call")
       )
     );
   }
     
   println (newMarks.size() + " marks loaded in " + (millis() - startMillis) + " ms"); 
-  marks=newMarks; 
+  //marks=newMarks; 
   loadingMarks = false;
-  
 }

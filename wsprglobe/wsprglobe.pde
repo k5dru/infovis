@@ -1,6 +1,12 @@
 
 /* TODO:
  
+ Music sound track:  Anthem by Emancipator from "soon it will be cold enough" album
+   available on the youtubes at https://www.youtube.com/watch?v=3PEGDGxZdzA
+   
+   or Comfort Zone by General Fuzz https://www.youtube.com/watch?v=RgsXxf9_LBI
+   
+   
  Sliders for:  
  done: minutes old observations
  done: update rate
@@ -66,8 +72,6 @@ float kmPerPixel = 20 ; /* 15 is realistic minium, 30 is realistic maximum */
 float prevKmPerPixel = kmPerPixel; /* to know when this has changed */
 
 
-
-
 void settings()
 { 
   size(1280, 850, P3D);
@@ -98,11 +102,13 @@ void setupGlobe() {
   noStroke();
   String image_url;
   /* from here: https://forum.processing.org/two/discussion/13500/applying-a-texture-to-a-sphere */
-  image_url="world32k.jpg"; // low-res sample file in processing examples 
   //image_url="https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_shallow_topo_2048.jpg";
   image_url="land_shallow_topo_2048.jpg";  // from https://visibleearth.nasa.gov/view.php?id=57752
   image_url = "Political_Map_Pat_50pct.jpg";  // free from http://www.shadedrelief.com/political/Political_Map_Pat.jpg
+  
+  /* this one is beautiful, but slow to load */
   image_url="world.topo.bathy.200412.3x5400x2700.jpg"; // from https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.jpg
+  image_url="world32k.jpg"; // low-res sample file in processing examples 
   
   
   earth = loadImage (image_url); 
@@ -196,10 +202,10 @@ void drawGlobe()
     translate(0, 0, ((earthRadius + 20) / kmPerPixel)); /* translate Z axis to 10km above surface*/
     //ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
 
-    drawGlyph(4); 
+    drawGlyph(4);  /* a sun indicator */
 
-    noFill();
-    text("D", (100 / kmPerPixel), - (100 / kmPerPixel));
+//    noFill();
+//    text("D", (100 / kmPerPixel), - (100 / kmPerPixel));
 
     // OK that's pretty cool.  Paint an anti-sun on the other side of the earth to represent local midnight 
     stroke(128, 128, 128);
@@ -207,10 +213,10 @@ void drawGlobe()
     fill(128, 128, 128);
     translate(0, 0, -2 * ((earthRadius + 20) / kmPerPixel)); /* translate Z axis to 10km above surface*/
     //ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
-    drawGlyph(5); 
+    drawGlyph(5);  /* an anti-sun indicator */
 
-    noFill();
-    text("N", (100 / kmPerPixel), - (100 / kmPerPixel));
+//    noFill();
+//    text("N", (100 / kmPerPixel), - (100 / kmPerPixel));
 
     /* can I overwite with a transparant one to make it a little moon? 
      fill(128,128,128, 0);
@@ -336,24 +342,46 @@ void drawText()
 
   dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-
   textAlign(RIGHT);
   textX = width - 10;
   textY = 0; 
-
-  text(mouseX + "," + mouseY, textX, (textY += textYInc)); 
-
-  //if (frameCount % 10 == 0) println(frameRate + " FPS");
+  
   text((int) frameRate + " FPS", textX, (textY += textYInc));
 
-  text("hs1.getPos() = " + hs1.getPos(), textX, (textY += textYInc));
-
-  if (marks != null) { 
-    text(marks.size() + " marks", textX, (textY += textYInc));
+  if (debugText)
+  { 
+    text("Mouse at " + mouseX + "," + mouseY, textX, (textY += textYInc)); 
+  
+    text("hs1 = " + hs1.getValue(), textX, (textY += textYInc));
+  
+    if (marks != null) { 
+      text(marks.size() + " marks", textX, (textY += textYInc));
+    }
+  
+    text("Scale: " + kmPerPixel + "km/pixel", textX, (textY += textYInc));
+    text("showControlsButton = " +     showControlsButton.getState(), textX, (textY += textYInc));
+    text("zoom = " +     zoom.getValue(), textX, (textY += textYInc));
+    text("showMarksButton = " +     showMarksButton.getState(), textX, (textY += textYInc));
+    text("markBright = " +     markBright.getValue(), textX, (textY += textYInc));
+    text("markWeight = " +     markWeight.getValue(), textX, (textY += textYInc));
+    text("txAltitudeButton = " +     txAltitudeButton.getState(), textX, (textY += textYInc));
+    text("txGlyphButton = " +     txGlyphButton.getState(), textX, (textY += textYInc));
+    text("colorDriftButton = " +     colorDriftButton.getState(), textX, (textY += textYInc));
+    text("colorFreqButton = " +     colorFreqButton.getState(), textX, (textY += textYInc));
+    text("showTextButton = " +     showTextButton.getState(), textX, (textY += textYInc));
+    text("spinButton = " +     spinButton.getState(), textX, (textY += textYInc));
+    text("spinRate = " +     spinRate.getValue(), textX, (textY += textYInc));
+    text("coastlineButton = " +     coastlineButton.getState(), textX, (textY += textYInc));
+    text("coastBright = " +     coastBright.getValue(), textX, (textY += textYInc));
+    text("lightBright = " +     lightBright.getValue(), textX, (textY += textYInc));
+    text("sunPointButton = " +     sunPointButton.getState(), textX, (textY += textYInc));
+    text("greylineButton = " +     greylineButton.getState(), textX, (textY += textYInc));
+    text("updateButton = " +     updateButton.getState(), textX, (textY += textYInc));
+    text("updateRate = " +     updateRate.getValue(), textX, (textY += textYInc));
+    text("timePerUpdate = " +     timePerUpdate.getValue(), textX, (textY += textYInc));
+    text("observationWindow = " +     observationWindow.getValue(), textX, (textY += textYInc));
+    text("showLegend = " +     showLegend.getState(), textX, (textY += textYInc));
   }
-
-  text("Scale: " + kmPerPixel + "km/pixel", textX, (textY += textYInc));
-
   return;
 }
 
@@ -363,7 +391,9 @@ int last_spin_millis = 0;
 void draw() {
   background(0);
   //  strokeWeight(2); 
-  kmPerPixel = round(( 30 - (zoom.getValue() * 20) ) * 10) / 10.0;  
+ 
+  /* zoom slider between 15 and 25 km per pixel */ 
+  kmPerPixel = 25 - (int)(zoom.getValue() * 11);
 
   /* lemley:  make a function of mouseX and mouseY, when mousePressed */
   /* this changes ths global viewpoint.  */
@@ -401,6 +431,36 @@ void draw() {
    );
    */
 
+  if (!loadingMarks)
+  { 
+    if (newMarks != null) /* aha! some previous thread has finished loading marks. */ 
+       marks = newMarks;
+   
+    /* check if time to do it again: */
+    if (millis() > (last_load_millis + (int)(updateRate.getValue() * 1000)) ) {
+      last_load_millis = millis(); 
+
+      if (updateButton.getState() || marks == null)
+      { 
+        if (endDate.getTime() > max_observationtime.getTime())
+        { 
+          beginDate = min_observationtime;  
+          endDate = min_observationtime;
+        }
+        /* increment input times to DB query by 2 minutes */
+        //beginDate = new Date(beginDate.getTime() + (int) (timePerUpdate.getValue() * 60) * (1000 * 60) );  // Java time is in milliseconds  
+        //endDate = new Date(beginDate.getTime() + (int) (observationWindow.getValue() * 15) * (1000 * 60) );   
+        
+        endDate = new Date(endDate.getTime() + (-60 + (int) (timePerUpdate.getValue() * 120)) * (1000 * 60) );
+        beginDate = new Date(endDate.getTime() - (int) (observationWindow.getValue() * 15) * (1000 * 60) );   
+        
+        //     loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol.
+        // asyncronously call thread to load the marks.
+        thread("loadMarks");
+      }
+    }
+  }
+
 
   updateControls(); 
 
@@ -416,7 +476,9 @@ void draw() {
     millisecondsIntoWindow *= 60000;
 
     endDate = new Date(min_observationtime.getTime() + millisecondsIntoWindow);
-    beginDate = new Date(endDate.getTime() - (1000 * 60) * (int) (observationWindow.getValue() * 15) );    
+   // endDate = new Date(endDate.getTime() + (-60 + (int) (timePerUpdate.getValue() * 120)) * (1000 * 60) );
+    beginDate = new Date(endDate.getTime() - (int) (observationWindow.getValue() * 15) * (1000 * 60) );   
+        
     thread("loadMarks");
   } else
   { 
@@ -448,7 +510,7 @@ void draw() {
 
   if (spinButton.getState()) 
   { 
-    viewpointY += ((millis() - last_spin_millis) / 2000.0) * (spinRate.getValue() - 0.5);
+    viewpointY += ((millis() - last_spin_millis) / 1000.0) * (spinRate.getValue() - 0.5);
   }
 
   last_spin_millis = millis(); 
@@ -459,33 +521,10 @@ void draw() {
 
   //rotateZ(radians(23.4)); //earth is tilted 23 degrees 
   drawGlobe();
-
-
-  if (millis() > (last_load_millis + (int)(updateRate.getValue() * 1000)) && !loadingMarks ) {
-    last_load_millis = millis(); 
-
-    if (updateButton.getState() || marks == null)
-    { 
-      if (endDate.getTime() > max_observationtime.getTime())
-      { 
-        beginDate = min_observationtime;  
-        endDate = min_observationtime;
-      }
-      /* increment input times to DB query by 2 minutes */
-      beginDate = new Date(beginDate.getTime() + (int) (timePerUpdate.getValue() * 60) * (1000 * 60) );  // Java time is in milliseconds  
-      endDate = new Date(beginDate.getTime() + (int) (observationWindow.getValue() * 15) * (1000 * 60) );   
-      //     loadMarks(beginDate, endDate); // WSPR data is updated every 2 minutes per protocol. 
-      thread("loadMarks");
-    }
-  }
-
-
-
+  
   // With an array, we say balls.length, with an ArrayList, we say balls.size()
   // The length of an ArrayList is dynamic
-  // Notice how we are looping through the ArrayList backwards
-  // This is because we are deleting elements from the list  
-
+  
   if (marks != null /* && showMarksButton.getState() */) { 
     for (int i = 0; i < marks.size(); i++) { 
       // An ArrayList doesn't know what it is storing so we have to cast the object coming out

@@ -34,22 +34,39 @@ void drawGlyph(int glyphType)
     roughSize = 150 / kmPerPixel; 
     ellipse(0, 0, roughSize, roughSize);
     //roughSize *= 0.62;
-    roughSize *= 0.8;
+    //roughSize *= 0.8;
     line(-roughSize,-roughSize,0,roughSize,roughSize,0);
     line(roughSize,-roughSize,0,-roughSize,roughSize,0);
   }
 }
 
-void earthGlyph(float latitude, float longitude, float altitude, int glyphType)
+void earthGlyph(float latitude, float longitude, float altitude, int glyphType, String label)
 { 
   /* challenge:  Draw a shape at a particular latitude, longitude, and altitude in km. */
   pushMatrix(); 
   rotateY( radians(longitude) ); /* must do Y axis first  */
   rotateX( radians(latitude) );
-  translate(0, 0, ((earthRadius + altitude)/ kmPerPixel)); /* translate Z axis */
+  
+  float tZ=((earthRadius + altitude)/ kmPerPixel);
+  
+  translate(0, 0, tZ); /* translate Z axis */
 
-  drawGlyph(glyphType); 
-
+  drawGlyph(glyphType);
+  
+  /* place label, if mouse close enough or something */ 
+  { 
+    float mdist = /* cartesian distance from mouse */ sqrt( (modelX(0, 0, tZ) - mouseX)*(modelX(0, 0, tZ) - mouseX) + (modelY(0, 0, tZ) - mouseY)*(modelY(0, 0, tZ) - mouseY) ); 
+        
+    if (mdist < 50)
+    {
+      fill (255, 192, 0);  /* like old amber screens */
+      stroke(255,255,255);
+      lights();  // since done drawing globe, bring up the lights so the text shows up.
+      // text(mdist, 0, 0);
+      text(label, 0, 0);
+    }          
+  }    
+  
   popMatrix();
 }
 
