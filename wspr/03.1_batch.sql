@@ -6,6 +6,13 @@ alter system set shared_buffers='10MB'; /* not too large since OS cache is faste
    The idea here is that there is only a weak relationship between observations over time, 
    we can break up our data into smaller time chunks to process. If we had a parallel 
    database this could be easier. 
+
+   First time through, create an index.  subsequent runs will be much faster 
+   and the index and table create statements will fail (ignore that). 
+
+   Munge all the data into its final location with the command line: 
+     while sleep 0.3; do psql < 03.1_batch.sql; done
+
 */ 
 
 create table wspr (
@@ -18,6 +25,7 @@ create table wspr (
 , rx_call           character varying(12)     
 , tx_dbm            smallint                  
 , rx_snr            smallint                  
+, distance_km       smallint
 , frequency         real                      
 , drift             smallint                  
 , quality_quartile  smallint                  
@@ -120,7 +128,7 @@ select observationtime
 -- ,tx_grid  -- I no longer care about actual grid, just best lat and lon.
 ,rx_call
 -- ,rx_grid
--- ,distance_km  -- I wonder how accurate these are, and if they can be used for a ballistic arc projection
+,distance_km 
 -- ,azimuth    
 ,tx_dbm    
 ,rx_snr   

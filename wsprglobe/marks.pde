@@ -14,6 +14,10 @@ void setupDatabase()
   //
   String database = "lemley";
 
+  // if using Docker defaults (see 000_optional_docker_postgresql.sh for postgresql install command line)
+  database="postgres"; 
+  user="postgres";
+  
   // connect to database on "localhost"
   //
   pgsql = new PostgreSQL( this, "localhost", database, user, pass );
@@ -173,6 +177,15 @@ boolean loadingMarks = false;  // semaphore for loading the newMarks arraylist
  
 void loadMarks() {
 
+  // bug:  this happened on Windows: 
+  // ### entering loadMarks(2017-12-02 09:38:00 +0000,2017-12-02 09:41:00 +0000) ... 124182 marks loaded in 19833 ms
+  // select tx_call , tx_latitude,  tx_longitude, rx_call, rx_latitude , rx_longitude , quality_quartile,
+  //drift, frequency , extract(MINUTES from ('2017-12-02 09:41:00 +0000'::timestamp with time zone - observationtime)) as observation_age 
+  //, tx_call, rx_call   from wspr         //
+  //where observationtime between '2017-12-02 09:38:00 +0000'::timestamp with time zone
+  //                          and '2017-12-02 09:41:00 -1100'::timestamp with time zone and quality_quartile = 4;
+  // presumably because dateFormat is being changed in the main thread.   
+  
   if (loadingMarks) return;  // some other thread beat me to it. 
   loadingMarks = true;       // set the semaphore. TODO: use a proper semaphore method. 
   
@@ -181,8 +194,7 @@ void loadMarks() {
   print("### entering loadMarks("+ dateFormat.format(beginDate) + ","+ dateFormat.format(endDate) +") ... "); 
   newMarks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
 
-  pgsql.query(""
-+" select tx_call "
+  String SQL=" select tx_call "
 +", tx_latitude"
 +",  tx_longitude"
 +", rx_call"
@@ -195,9 +207,12 @@ void loadMarks() {
 +"  where observationtime between '" + dateFormat.format(beginDate) + "'::timestamp with time zone"
 +"                            and '" + dateFormat.format(endDate) + "'::timestamp with time zone"
 +" and quality_quartile = 4" 
-+" and rx_snr < -22 "  /* mode is -22, mean is -14.5 */
-//+"  order by random() limit 100           "
-  );
+//+" and rx_snr < -22 "  /* mode is -22, mean is -14.5 */
+// on new Windows load, these ended up as positive integers.  Why? 
+// they are negative on the stage table.  How did that affect my quality calculation?
+;
+
+  pgsql.query(SQL);
      
   /* 1649 rows at '2017-12-14 06:08-06' */
 
@@ -221,7 +236,8 @@ void loadMarks() {
     );
   }
     
-  println (newMarks.size() + " marks loaded in " + (millis() - startMillis) + " ms"); 
+  println (newMarks.size() + " marks loaded in " + (millis() - startMillis) + " ms");
+  println ("Query is: " + SQL); 
   //marks=newMarks; 
   loadingMarks = false;
 }
