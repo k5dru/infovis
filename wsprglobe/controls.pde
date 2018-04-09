@@ -70,7 +70,7 @@ void setupControls()
   colorFreqButton.setState(false);
   
   showTextButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
-  showTextButton.setNominalValue("Show Text");
+  showTextButton.setNominalValue("Show World Times");
   showTextButton.setState(false);
 
   spinButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
@@ -252,7 +252,7 @@ void processPresets()
     updateRate.setValue(8.515e-9);
     timePerUpdate.setValue(0.893);
     observationWindow.setValue(0.2232);
-    showLegend.setState(false);
+    showLegend.setState(true);
   }
 
   if (keyPressed && key == 's')    // slowed down so that every mark is visible 
@@ -560,3 +560,8 @@ class boolButton {
     currentState = b;
   }
 }
+
+
+  
+  
+  

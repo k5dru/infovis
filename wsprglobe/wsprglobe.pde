@@ -245,7 +245,7 @@ void drawGlobe()
   }
 
   popMatrix(); 
-
+  strokeWeight(1);
 
   if (coastlineButton.getState() == false) 
     stroke(0, 0, 255, 80);
@@ -385,6 +385,132 @@ void drawText()
   return;
 }
 
+void drawLegend() { 
+  /* draw in lower right corner */
+  
+  int xinc = 20; 
+  int yinc = 20; 
+  int current_y = height - (height / 3); 
+  int current_x = width - (width / 7);
+  stroke (255, 192, 0);
+  noFill(); 
+  strokeWeight(1);
+  
+  rect(current_x, current_y, width - current_x - 10, height - current_y - 40);
+  current_x += xinc; 
+  current_y += yinc; 
+  fill (255, 192, 0);
+  textAlign(LEFT);
+  //text("Legend", current_x, (current_y += yinc));
+
+  /* draw the list of glyphs and symbols */ 
+  if ( txGlyphButton.getState() ) 
+  { 
+    pushMatrix(); 
+    translate(current_x, current_y); 
+    stroke(128, 128, 128);
+    strokeWeight(1); 
+    drawGlyph(3); // transmit  
+    translate(0, yinc); 
+    drawGlyph(1); //receive
+    popMatrix(); 
+    text("Transmit Site", current_x + xinc, current_y ); current_y+=yinc; 
+    text("Receive Site", current_x + xinc, current_y ); current_y+=yinc;
+  }
+  if (greylineButton.getState()) 
+  { 
+    pushMatrix(); 
+    translate(current_x, current_y); 
+    stroke(128, 128, 128);
+    strokeWeight(2); 
+    drawGlyph(4); // sun point
+    translate(0, yinc); 
+    drawGlyph(5); // sun anti-point
+    translate(0, yinc); 
+    // draw an arc in the style of the grey line 
+    strokeWeight(8); 
+    noFill();
+    ellipseMode(CENTER);
+    //    translate(0, 0, (-50 / kmPerPixel)); /* translate Z axis to 10km above surface*/
+    arc(0,0, xinc, yinc, -QUARTER_PI, QUARTER_PI);
+    //ellipse (0, 0, ((earthRadius * 2 + 100) / kmPerPixel), ((earthRadius * 2 + 100) / kmPerPixel));
+    
+    popMatrix(); 
+    text("Sun Over-Head Point", current_x + xinc, current_y); current_y+=yinc;
+    text("Sun Anti-Point", current_x + xinc, current_y); current_y+=yinc;
+    text("Day/Night Partition", current_x + xinc, current_y); current_y+=yinc;
+    
+  }
+  if (colorFreqButton.getState())
+  { 
+    int cr, cb, cg;
+
+    current_y += yinc;  // blank line between glyphs and palette 
+    // make this match the marks code 
+
+    fill (255, 192, 0);
+    text("Color by Frequency", current_x, current_y); current_y+=yinc;
+
+    { cr = 255; cg = 255; cb = 0; }        // yellow
+    strokeWeight(1); 
+    stroke (cr, cg, cb, 128);
+    fill (cr, cg, cb, 128);
+    rect(current_x- 5, current_y-10, 10, 10);
+    fill (255, 192, 0);
+    text("Less than 4 MHz", current_x + xinc, current_y); current_y+=yinc;
+    
+    { cr = 255; cg = 255; cb = 255;}               // white
+    stroke (cr, cg, cb, 128);
+    fill (cr, cg, cb, 128);
+    rect(current_x - 5, current_y-10, 10, 10);
+    fill (255, 192, 0);
+    text("4 to 10 MHz", current_x + xinc, current_y); current_y+=yinc;
+   
+    { cr = 0; cg = 255; cb = 255;}  // bluegreen  
+    stroke (cr, cg, cb, 128);
+    fill (cr, cg, cb, 128);
+    rect(current_x - 5, current_y-10, 10, 10);
+    fill (255, 192, 0);
+    text("Greater than 10 MHz", current_x + xinc, current_y); current_y+=yinc;
+  }
+
+  /* mutually exclusive with: */ 
+  if (colorDriftButton.getState())
+  { 
+    int cr, cb, cg;
+
+    current_y += yinc;  // blank line between glyphs and palette 
+    // make this match the marks code 
+
+    fill (255, 192, 0);
+    text("Color by Drift", current_x, current_y); current_y+=yinc;
+
+    { cr = 255; cg = 255; cb = 0; }        // yellow
+    strokeWeight(1); 
+    stroke (cr, cg, cb, 128);
+    fill (cr, cg, cb, 128);
+    rect(current_x- 5, current_y-10, 10, 10);
+    fill (255, 192, 0);
+    text("Negative Drift", current_x + xinc, current_y); current_y+=yinc;
+    
+    { cr = 255; cg = 255; cb = 255;}               // white
+    stroke (cr, cg, cb, 128);
+    fill (cr, cg, cb, 128);
+    rect(current_x - 5, current_y-10, 10, 10);
+    fill (255, 192, 0);
+    text("No Drift", current_x + xinc, current_y); current_y+=yinc;
+   
+    { cr = 0; cg = 255; cb = 255;}  // bluegreen  
+    stroke (cr, cg, cb, 128);
+    fill (cr, cg, cb, 128);
+    rect(current_x - 5, current_y-10, 10, 10);
+    fill (255, 192, 0);
+    text("Positive Drift", current_x + xinc, current_y); current_y+=yinc;
+  }
+
+}
+
+
 int last_load_millis = 0;
 int last_spin_millis = 0; 
 
@@ -502,7 +628,12 @@ void draw() {
 
   /* do any text processing before rotating the world. */
   if (showTextButton.getState())
+  {
     drawText();
+  }    
+  if (showLegend.getState()) {   
+    drawLegend();
+  }
 
   translate(width/2, height/2, 0);  // aha! This makes our drawing coordiate system zero-in-the-middle
   rotateX(viewpointX);

@@ -15,8 +15,8 @@ void setupDatabase()
   String database = "lemley";
 
   // if using Docker defaults (see 000_optional_docker_postgresql.sh for postgresql install command line)
-  database="postgres"; 
-  user="postgres";
+  //database="postgres"; 
+  //user="postgres";
   
   // connect to database on "localhost"
   //
@@ -147,8 +147,8 @@ class Mark {
     } 
     else if ( colorDriftButton.getState() ) { 
      /* set color based on drift: */
-      if (drift > 0) { cr = 255; cg = 255; cb = 0; }        // yellow 
-      else if (drift < 0) { cr = 0; cg = 255; cb = 255;}  // bluegreen  
+      if (drift < 0) { cr = 255; cg = 255; cb = 0; }        // yellow 
+      else if (drift > 0) { cr = 0; cg = 255; cb = 255;}  // bluegreen  
       else  { cr = 255; cg = 255; cb = 255;}               // white
       stroke(cr,cg,cb, alpha * markBright.getValue());    
     }
