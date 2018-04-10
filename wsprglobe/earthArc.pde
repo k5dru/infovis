@@ -1,6 +1,8 @@
-
+/* draw on the surface of the Earth. Use globals kmPerPixel and earthRadius to determine where. */  
+  
 void drawGlyph(int glyphType)
 {
+  /* draws a glyph at the current location */
   if (glyphType == 1) {  /* circle */
    ellipseMode(CENTER);
     noFill();

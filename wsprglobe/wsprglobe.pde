@@ -23,9 +23,9 @@
  
  done: sloppyarc vs. precisionarc.  Use sloppyarc for coastlines.
  
- Legend for drift or band.
+ done: Legend for drift or band.
  
- Done; didn't like: Consider this as a mechanism to indicate direction: 
+ Done but didn't like: Consider this as a mechanism to indicate direction: 
  beginShape(LINES);
  stroke(0);
  vertex(x, y, z);
@@ -218,11 +218,6 @@ void drawGlobe()
 //    noFill();
 //    text("N", (100 / kmPerPixel), - (100 / kmPerPixel));
 
-    /* can I overwite with a transparant one to make it a little moon? 
-     fill(128,128,128, 0);
-     ellipse (0, 0, (200 / kmPerPixel), (200 / kmPerPixel));
-     no, I can't. the other one just shows under it. 
-     */
   }
 
   /* fill(10, 10, 120); 10, 10, 120 is my guess of earth blue, or my guess at it at least */
@@ -525,8 +520,8 @@ void draw() {
   /* this changes ths global viewpoint.  */
 
   if (mousePressed &&   // check if in rough middle of screen 
-    (mouseX > width * 0.25 && mouseX < width * 0.75) &&
-    (mouseY > height * 0.25 && mouseY < height * 0.75)
+    (mouseX > width * 0.20 && mouseX < width * 0.80) &&
+    (mouseY > height * 0.15 && mouseY < height * 0.85)
     ) {
     /* OH VERY INTERESTING, this cuts out the back half of the visualization, even though I haven't 
      drawn any arcs yet.  Why?  */

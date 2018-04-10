@@ -1,5 +1,14 @@
 JSONObject json_coastline;
 
+/* Deal with the Earth coastline. 
+
+TODO:  Make the coastline a shape object, set it up once or when resizing, then just display it 
+every time instead of drawing each line individually on every refresh of the screen.
+The problem is I don't know how to do this with the method of translating x, y, z and then 
+drawing a line, as is currently done. How to add a vertex to a shape without using translate()?
+
+*/
+
 void setupCoastline()
 {
     // load JSON coastline, converted from ne_10m_admin_0_boundary_lines_land with https://geoconverter.hsr.ch/
@@ -19,17 +28,18 @@ void setupCoastline()
 void drawCoastline()
 { 
   strokeWeight(2);
+  int drawEveryN=30;
 
   /* with thanks to https://forum.processing.org/one/topic/how-to-read-geojson-data.html */
   JSONArray coasts = json_coastline.getJSONArray("features"); 
   for (int i = 0; i < coasts.size(); i++) { 
     String coasttype = (coasts.getJSONObject(i).getJSONObject("geometry").getString("type"));
     JSONArray coastdata = coasts.getJSONObject(i).getJSONObject("geometry").getJSONArray("coordinates");
-    for (int j = 0; j < coastdata.size(); j+=50) { 
-      /* note:  i am using every 50th point, because it is far too slow for me to graph every point. */
+    for (int j = 0; j < coastdata.size(); j+=drawEveryN) { 
+      /* note:  i am using every Nth point, because it is far too slow for me to graph every point. */
       if ( coasttype.equals("LineString") && j > 0) { 
         //println (" latitude line from  " + coastdata.getJSONArray(j-1).getDouble(0) + " to " + coastdata.getJSONArray(j).getDouble(0));
-        fastArc(coastdata.getJSONArray(j-50).getFloat(1), coastdata.getJSONArray(j-50).getFloat(0), (float) 0, 
+        fastArc(coastdata.getJSONArray(j-drawEveryN).getFloat(1), coastdata.getJSONArray(j-drawEveryN).getFloat(0), (float) 0, 
           coastdata.getJSONArray(j).getFloat(1), coastdata.getJSONArray(j).getFloat(0), (float) 0);
         //earthPoint(coastdata.getJSONArray(j).getFloat(1), coastdata.getJSONArray(j).getFloat(0), (float) 0);
       }

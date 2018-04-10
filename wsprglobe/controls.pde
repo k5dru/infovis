@@ -27,7 +27,6 @@ boolean debugText = false;
 
 void setupControls() 
 { 
-
   /* float xposition, float yposition, int swidth, int sheight, int lethargy */
   hs1 = new HScrollbar(0, height-9, width, 16, 1);
 
