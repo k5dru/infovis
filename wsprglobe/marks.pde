@@ -9,18 +9,23 @@ void setupDatabase()
   /* make database connection */
   String user     = "lemley";
   String pass     = "InfoVisIsAwesome";
-
-  // name of the database to use
-  //
   String database = "lemley";
-
+  String dbhost = "localhost";
   // if using Docker defaults (see 000_optional_docker_postgresql.sh for postgresql install command line)
   //database="postgres"; 
   //user="postgres";
+
+  // if on windows PC with postgresql in vm:
+  { 
+//    user     = "";
+//    pass     = "";
+//    database = "";
+    dbhost = "192.168.56.103";
+  }
   
-  // connect to database on "localhost"
+    
   //
-  pgsql = new PostgreSQL( this, "localhost", database, user, pass );
+  pgsql = new PostgreSQL( this, dbhost, database, user, pass );
 
   // connected?
   if ( pgsql.connect() )
@@ -41,16 +46,16 @@ void setupDatabase()
       println( pgsql.getFloat("rx_latitude") );      //| real                     | 
       println( pgsql.getFloat("rx_longitude") );     //| real                     | 
       println( pgsql.getString("tx_call") );          //| character varying(12)    | 
-      println( pgsql.getString("tx_grid") );          //| character varying(6)     | 
+      //println( pgsql.getString("tx_grid") );          //| character varying(6)     | 
       println( pgsql.getString("rx_call") );          //| character varying(12)    | 
-      println( pgsql.getString("rx_grid") );          //| character varying(6)     | 
-      // println( pgsql.getInt("distance_km") );      //| smallint                 | 
+      //println( pgsql.getString("rx_grid") );          //| character varying(6)     | 
+       println( pgsql.getInt("distance_km") );      //| smallint                 | 
       // println( pgsql.getInt("azimuth") );          //| smallint                 | 
       println( pgsql.getInt("tx_dbm") );           //| smallint                 | 
       println( pgsql.getInt("rx_snr") );           //| smallint                 | 
       println( pgsql.getFloat("frequency") );        //| real                     | 
       println( pgsql.getInt("drift") );            //| smallint                 | 
-      println( pgsql.getFloat("quality") );          //| real                     | 
+      //println( pgsql.getFloat("quality") );          //| real                     | 
       println( pgsql.getInt("quality_quartile") ); //| smallint                 |
     }
   } else
@@ -177,21 +182,15 @@ boolean loadingMarks = false;  // semaphore for loading the newMarks arraylist
  
 void loadMarks() {
 
-  // bug:  this happened on Windows: 
-  // ### entering loadMarks(2017-12-02 09:38:00 +0000,2017-12-02 09:41:00 +0000) ... 124182 marks loaded in 19833 ms
-  // select tx_call , tx_latitude,  tx_longitude, rx_call, rx_latitude , rx_longitude , quality_quartile,
-  //drift, frequency , extract(MINUTES from ('2017-12-02 09:41:00 +0000'::timestamp with time zone - observationtime)) as observation_age 
-  //, tx_call, rx_call   from wspr         //
-  //where observationtime between '2017-12-02 09:38:00 +0000'::timestamp with time zone
-  //                          and '2017-12-02 09:41:00 -1100'::timestamp with time zone and quality_quartile = 4;
-  // presumably because dateFormat is being changed in the main thread.   
+  SimpleDateFormat dateUTC = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+  dateUTC.setTimeZone(TimeZone.getTimeZone("UTC"));
   
   if (loadingMarks) return;  // some other thread beat me to it. 
   loadingMarks = true;       // set the semaphore. TODO: use a proper semaphore method. 
   
   int startMillis = millis(); 
 
-  print("### entering loadMarks("+ dateFormat.format(beginDate) + ","+ dateFormat.format(endDate) +") ... "); 
+  print("### entering loadMarks("+ dateUTC.format(beginDate) + ","+ dateUTC.format(endDate) +") ... "); 
   newMarks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
 
   String SQL=" select tx_call "
@@ -204,8 +203,8 @@ void loadMarks() {
 +" , extract(MINUTES from ('" + dateFormat.format(endDate) + "'::timestamp with time zone - observationtime)) as observation_age"
 +" , tx_call, rx_call "
 +"  from wspr       "
-+"  where observationtime between '" + dateFormat.format(beginDate) + "'::timestamp with time zone"
-+"                            and '" + dateFormat.format(endDate) + "'::timestamp with time zone"
++"  where observationtime between '" + dateUTC.format(beginDate) + "'::timestamp with time zone"
++"                            and '" + dateUTC.format(endDate) + "'::timestamp with time zone"
 +" and quality_quartile = 4" 
 //+" and rx_snr < -22 "  /* mode is -22, mean is -14.5 */
 // on new Windows load, these ended up as positive integers.  Why? 
