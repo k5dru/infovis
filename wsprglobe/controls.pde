@@ -33,7 +33,8 @@ void setupControls()
 
   int buttonY = 100;
   int buttonX = 10;
-  int yInc = 18;
+  //int yInc = 18;
+  int yInc = 20;
   int buttonSize=10;
 
   showControlsButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
