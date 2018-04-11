@@ -124,9 +124,11 @@ void setupGlobe() {
   globe.setTexture(earth);
 }
 
+PFont defaultFont;
+
 void setup() {
   background(0);
-
+  
   setupGlobe();
 
   setupControls(); 
@@ -135,6 +137,10 @@ void setup() {
 
   setupCoastline();
 
+  //printArray(PFont.list()); 
+  // tinyFont=createFont("FreeSans", 16);
+  defaultFont=createFont("Lucida Sans Regular", 12); 
+  
 }
 
 
@@ -261,7 +267,7 @@ void drawGlobe()
   shape(globe);
   rotateY(radians(-90)); 
 
-  /* try to mark the poles */
+  /* try to mark the poles 
   fill(20);  
   stroke(255, 0, 0); 
   //earthPoint(90.0, 0, 300); earthPoint(90.0, 0, 600); earthPoint(90.0, 0, 900);
@@ -269,46 +275,45 @@ void drawGlobe()
   stroke(0, 0, 255);
   //earthPoint(-90.0, 0, 300); earthPoint(-90.0, 0, 600); earthPoint(-90.0, 0, 900);
   fastArc(-90, 0, 0, -90, 0, 3000);
+  */
 
   if (coastlineButton.getState() == false) 
     return;
 
-
   /* mark the equator and +45 degrees north */
   stroke(0, 180, 0, 128 * coastBright.getValue());
-
-  /* mark the latitude lines 
-   for (int lat = -80; lat <= 80; lat += 10)
-   for (int lon = -180; lon < 180; lon += 2)  
-   earthPoint(lat, lon, 0); 
-   
-  /* mark the maridians  
-   for (int lat = -90; lat < 90; lat += 2)
-   for (int lon = -180; lon <= 180; lon += 10)  
-   earthPoint(lat, lon, 0); 
-   */
-
-  /* do the same thing with earthArc */
-  /* mark the latitude lines 
-   */
-
+  fill(255,255,255,255);
+  textFont(defaultFont, 8);
 
   for (int lat = -80; lat <= 80; lat += 10)
-    for (int lon = -180; lon < 180; lon += 10)  
-      fastArc(lat, lon, 0, lat, lon+10, 0); 
-
+  {
+    for (int lon = -180; lon < 180; lon += 90)
+    { 
+      fastArc(lat, lon, 0, lat, lon+90, 0);
+      if (lat != 0) 
+        earthLabel(lat, lon, 10, lat + "");
+    }
+  }
   /* mark the maridians   
    for (int lon = -170; lon <= 180; lon += 10)  
    earthArc(-90, lon, 0, 90, lon, 0);
    */
   /* better, mark each hour, which is every 15 degrees */
   for (int lon = -165; lon <= 180; lon += 15)  
+  {
     fastArc(-90, lon, 0, 90, lon, 0);
+    earthLabel(0, lon-2, 0, lon + ""); 
+  }
+
+
+  textFont(defaultFont, 12);
 
   stroke(0, 180, 0, 256 * coastBright.getValue());
-
-  drawCoastline();
+  
+  if (coastlineButton.getState() == true) 
+    drawCoastline();
 }
+
 
 void drawText() 
 { 
@@ -650,7 +655,8 @@ void draw() {
   
   // With an array, we say balls.length, with an ArrayList, we say balls.size()
   // The length of an ArrayList is dynamic
-  
+ 
+  textFont(defaultFont, 8);
   if (marks != null /* && showMarksButton.getState() */) { 
     for (int i = 0; i < marks.size(); i++) { 
       // An ArrayList doesn't know what it is storing so we have to cast the object coming out
@@ -658,4 +664,5 @@ void draw() {
       mark.display();
     }
   }
+  textFont(defaultFont, 12);
 }

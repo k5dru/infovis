@@ -85,10 +85,10 @@ void setupControls()
   coastlineButton.setState(false);
 
   coastBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-  coastBright.setValue(0.7);
+  coastBright.setValue(0.8);
 
   lightBright = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
-  lightBright.setValue(0.7);
+  lightBright.setValue(0.8);
 
 
   sunPointButton = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
@@ -268,7 +268,7 @@ void processPresets()
 
   if (keyPressed && key == 'f')    // defaults 
   {
-    showControlsButton.setState(false);
+    showControlsButton.setState(true);
     zoom.setValue(0.5);
     showMarksButton.setState(false);
     markBright.setValue(0.45);
@@ -281,8 +281,8 @@ void processPresets()
     spinButton.setState(false);
     spinRate.setValue(0.6);
     coastlineButton.setState(false);
-    coastBright.setValue(0.7);
-    lightBright.setValue(0.7);
+    coastBright.setValue(0.8);
+    lightBright.setValue(0.8);
     sunPointButton.setState(false);
     greylineButton.setState(false);
     updateButton.setState(false);

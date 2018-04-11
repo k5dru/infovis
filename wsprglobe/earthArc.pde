@@ -72,6 +72,24 @@ void earthGlyph(float latitude, float longitude, float altitude, int glyphType, 
   popMatrix();
 }
 
+void earthLabel(float latitude, float longitude, float altitude, String label)
+{ 
+  /* challenge:  Draw a shape at a particular latitude, longitude, and altitude in km. */
+  pushMatrix(); 
+  rotateY( radians(longitude) ); /* must do Y axis first  */
+  rotateX( radians(latitude) );
+  
+  float tZ=((earthRadius + altitude)/ kmPerPixel);
+  
+  translate(0, 0, tZ); /* translate Z axis */
+
+  /* place label */ 
+  text(label, 0, 0);
+  
+  popMatrix();
+}
+
+
 
 int earthArcLevel = 0; /* recursive level tracking variable to prevent stack overflow because I am not a math major */
 

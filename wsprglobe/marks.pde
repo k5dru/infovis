@@ -16,12 +16,12 @@ void setupDatabase()
   //user="postgres";
 
   // if on windows PC with postgresql in vm:
-  { 
+//  { 
 //    user     = "";
 //    pass     = "";
 //    database = "";
-    dbhost = "192.168.56.103";
-  }
+//    dbhost = "192.168.56.103";
+//  }
   
     
   //
