@@ -49,7 +49,7 @@ void setupDatabase()
       //println( pgsql.getString("tx_grid") );          //| character varying(6)     | 
       println( pgsql.getString("rx_call") );          //| character varying(12)    | 
       //println( pgsql.getString("rx_grid") );          //| character varying(6)     | 
-       println( pgsql.getInt("distance_km") );      //| smallint                 | 
+      // println( pgsql.getInt("distance_km") );      //| smallint                 | 
       // println( pgsql.getInt("azimuth") );          //| smallint                 | 
       println( pgsql.getInt("tx_dbm") );           //| smallint                 | 
       println( pgsql.getInt("rx_snr") );           //| smallint                 | 
@@ -190,7 +190,7 @@ void loadMarks() {
   
   int startMillis = millis(); 
 
-  print("### entering loadMarks("+ dateUTC.format(beginDate) + ","+ dateUTC.format(endDate) +") ... "); 
+//  print("### entering loadMarks("+ dateUTC.format(beginDate) + ","+ dateUTC.format(endDate) +") ... "); 
   newMarks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
 
   String SQL=" select tx_call "
@@ -235,8 +235,8 @@ void loadMarks() {
     );
   }
     
-  println (newMarks.size() + " marks loaded in " + (millis() - startMillis) + " ms");
-  println ("Query is: " + SQL); 
+//  println (newMarks.size() + " marks loaded in " + (millis() - startMillis) + " ms");
+//  println ("Query is: " + SQL); 
   //marks=newMarks; 
   loadingMarks = false;
 }

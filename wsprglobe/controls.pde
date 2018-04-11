@@ -231,10 +231,11 @@ void processPresets()
   if (keyPressed && key == 'a')   // a rather frenetic display, useful for seeing that moving dude
   {
     //debugText = true;
+    hs1.setValue(0.4);
     showControlsButton.setState(true);
     //zoom.setValue(0.7054);
     showMarksButton.setState(true);
-    markBright.setValue(0.65);
+    markBright.setValue(0.4);
     markWeight.setValue(0.2);
     txAltitudeButton.setState(false);
     txGlyphButton.setState(true);
@@ -249,7 +250,7 @@ void processPresets()
     sunPointButton.setState(true);
     greylineButton.setState(true);
     updateButton.setState(true);
-    updateRate.setValue(8.515e-9);
+    updateRate.setValue(0.125);
     timePerUpdate.setValue(0.893);
     observationWindow.setValue(0.2232);
     showLegend.setState(true);
