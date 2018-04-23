@@ -193,24 +193,40 @@ void loadMarks() {
 //  print("### entering loadMarks("+ dateUTC.format(beginDate) + ","+ dateUTC.format(endDate) +") ... "); 
   newMarks = new ArrayList<Mark>();  /* what happens to the old one?  It's Java - presumably it gets "collected".  */
 
-  String SQL=" select tx_call "
+  String SQL=" select observationtime, tx_call "
 +", tx_latitude"
 +",  tx_longitude"
 +", rx_call"
 +", rx_latitude"
 +" , rx_longitude"
++" , quality"
 +" , quality_quartile, drift, frequency"
 +" , extract(MINUTES from ('" + dateFormat.format(endDate) + "'::timestamp with time zone - observationtime)) as observation_age"
-+" , tx_call, rx_call "
++" , rx_call "
 +"  from wspr       "
 +"  where observationtime between '" + dateUTC.format(beginDate) + "'::timestamp with time zone"
 +"                            and '" + dateUTC.format(endDate) + "'::timestamp with time zone"
-+" and quality_quartile = 4" 
+//+" and quality_quartile = 4" 
 //+" and rx_snr < -22 "  /* mode is -22, mean is -14.5 */
 // on new Windows load, these ended up as positive integers.  Why? 
 // they are negative on the stage table.  How did that affect my quality calculation?
 ;
 
+  if (filter1.getState()) {
+    SQL = SQL + " and quality_quartile = 4"; 
+  }
+
+  if (filter2.getState()) {
+    SQL = SQL + " and distance_km > 2000"; 
+  }
+  
+  if (true) { 
+    /* allow only 5 best edges per tx station per observation: */ 
+    SQL = "select * from (select data.*, row_number() over (partition by observationtime, tx_call order by quality desc) as tx_rownum from ("
+    + SQL 
+    + ") data) data2 where tx_rownum <= 5";    
+  }
+  
   pgsql.query(SQL);
      
   /* 1649 rows at '2017-12-14 06:08-06' */

@@ -355,7 +355,7 @@ void drawText()
     text("hs1 = " + hs1.getValue(), textX, (textY += textYInc));
   
     if (marks != null) { 
-      text(marks.size() + " marks", textX, (textY += textYInc));
+      text(marks.size() + " edges", textX, (textY += textYInc));
     }
   
     text("Scale: " + kmPerPixel + "km/pixel", textX, (textY += textYInc));
@@ -506,6 +506,16 @@ void drawLegend() {
     rect(current_x - 5, current_y-10, 10, 10);
     fill (255, 192, 0);
     text("Positive Drift", current_x + xinc, current_y); current_y+=yinc;
+  }
+
+  if ( filter1.getState() ) 
+  { 
+    text("Filter: High Quality Quartile", current_x, current_y ); current_y+=yinc; 
+  }
+
+  if ( filter2.getState() ) 
+  { 
+    text("Filter: Over 2000 km", current_x, current_y ); current_y+=yinc; 
   }
 
 }

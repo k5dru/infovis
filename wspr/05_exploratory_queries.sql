@@ -90,3 +90,84 @@ about two thirds are under 10
     99: 21.09  
 */
 
+
+
+
+/* group by TX prefix  */ 
+
+select
+substr(tx_call, 1, 2) as tx_prefix,
+substr(rx_call, 1, 2) as rx_prefix,
+max(observationtime) as observationtime, 
+avg(tx_latitude) as tx_lat, 
+avg(tx_longitude) as tx_lon, 
+avg(rx_latitude) as rx_lat, 
+avg(rx_longitude) as rx_lon,
+--substr(tx_grid, 1, 2),
+avg(distance_km) as avg_km,
+avg(quality_quartile) as avg_q,
+count(*), 
+row_number() over (partition by substr(tx_call, 1, 2) order by avg(distance_km) desc)
+from wspr
+where quality_quartile = 4
+and observationtime between '2017-12-24 18:00' and '2017-12-24 18:15'
+group by 1,2; 
+
+/* only allow the 5 highest quality observations per TX station per minute */
+select  * 
+from (
+  select wspr.*, 
+  row_number() over (partition by observationtime, tx_call order by quality desc)
+  as quality_rank, 
+  row_number() over (partition by observationtime, tx_call order by distance_km desc)
+  as distance_rank, 
+  count(*) over (partition by observationtime, tx_call) as tx_observation_count
+  from wspr
+  where observationtime between '2017-12-24 18:00' and '2017-12-24 18:15'
+  and quality_quartile = 4
+) ranked_observations
+where 
+distance_rank <= 5;
+
+/* try grouping by tx grid -- this has potential */ 
+select  * 
+from (
+  select wspr.*, 
+  row_number() over (partition by observationtime, substr(tx_grid, 1, 2) order by quality desc)
+  as quality_rank, 
+  row_number() over (partition by observationtime, substr(tx_grid, 1, 2) order by distance_km desc)
+  as distance_rank, 
+  count(*) over (partition by observationtime, substr(tx_grid, 1, 2)) as grid_observation_count
+  from wspr
+  where observationtime between '2017-12-24 18:00' and '2017-12-24 18:15'
+  and quality_quartile = 4
+) ranked_observations
+where 
+distance_rank <= 5;
+
+
+
+/* holy crow; some stations are being reported dozens or hundreds of times per observation. 
+   Find a way to limit to the best obverstations by station: */ 
+select wspr.*, 
+row_number() over (partition by observationtime, tx_call order by quality desc) as tx_rownum 
+from wspr 
+where observationtime between '2017-12-24 08:00' and '2017-12-24 08:05';
+
+/* Stations with qval of 4 are heard on average 6 times, but max reports can be in the dozens. */ 
+select observationtime, min(tx_observations), avg(tx_observations), max(tx_observations)
+from (
+  select observationtime, tx_call, max(tx_rownum) as tx_observations
+  from (
+    select wspr.observationtime, tx_call, rx_call, distance_km, quality, 
+    row_number() over (partition by observationtime, tx_call order by quality desc) as tx_rownum 
+    from wspr 
+    where observationtime between '2017-12-24 08:00' and '2017-12-24 12:05'
+    and quality_quartile = 4
+  ) data 
+  group by 1,2
+  order by 1,2
+) dat2
+ group by 1
+order by 1
+;

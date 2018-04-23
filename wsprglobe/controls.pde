@@ -22,6 +22,8 @@ boolButton txGlyphButton;
 boolButton colorFreqButton;
 boolButton colorDriftButton;
 boolButton showLegend;
+boolButton filter1;  /* to filter the data */ 
+boolButton filter2;  /* to filter the data even more */
 
 boolean debugText = false; 
 
@@ -111,6 +113,14 @@ void setupControls()
   timePerUpdate.setValue(0.56);
 
   observationWindow = new HScrollbar(buttonX, buttonY += (yInc * 2), width / 10, 16, 3);
+
+  filter1 = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  filter1.setNominalValue("Filter: Higest Quality Quartile");
+  filter1.setState(false);
+
+  filter2 = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  filter2.setNominalValue("Filter: Over 2000 km");
+  filter2.setState(false);
 
   showLegend = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showLegend.setNominalValue("Show Legend");
@@ -216,6 +226,12 @@ void updateControls()
       colorFreqButton.setState(false);
     }
 
+    filter1.update(); 
+    filter1.display();
+    
+    filter2.update(); 
+    filter2.display();
+
     showLegend.update(); 
     showLegend.display();
 
@@ -253,6 +269,8 @@ void processPresets()
     updateRate.setValue(0.125);
     timePerUpdate.setValue(0.893);
     observationWindow.setValue(0.2232);
+    filter1.setState(true);
+    filter2.setState(false);
     showLegend.setState(true);
   }
 
@@ -290,6 +308,8 @@ void processPresets()
     updateRate.setValue(0.25);
     timePerUpdate.setValue(0.56);
     showLegend.setState(false);
+    filter1.setState(false);
+    filter2.setState(false);
     debugText = false;
   }
 
