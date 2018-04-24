@@ -274,12 +274,12 @@ void processPresets()
     sunPointButton.setState(true);
     greylineButton.setState(true);
     updateButton.setState(true);
-    updateRate.setValue(0.125);
-    timePerUpdate.setValue(0.893);
-    observationWindow.setValue(0.2232);
+    updateRate.setValue(0.025);
+    timePerUpdate.setValue(0.9732);
+    observationWindow.setValue(0.1875);
     filter1.setState(true);
-    filter2.setState(false);
-    filter3.setState(false);
+    filter2.setState(true);
+    filter3.setState(true);
     showLegend.setState(true);
   }
 

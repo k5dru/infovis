@@ -201,7 +201,7 @@ void loadMarks() {
 +" , rx_longitude"
 +" , quality"
 +" , quality_quartile, drift, frequency"
-+" , extract(MINUTES from ('" + dateFormat.format(endDate) + "'::timestamp with time zone - observationtime)) as observation_age"
++" , extract(MINUTES from ('" + dateUTC.format(endDate) + "'::timestamp with time zone - observationtime)) as observation_age"
 +" , rx_call "
 +"  from wspr       "
 +"  where observationtime between '" + dateUTC.format(beginDate) + "'::timestamp with time zone"

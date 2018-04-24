@@ -15,7 +15,7 @@
  received strength of observations 
  
  filter for signals that are new, not seen in a few hours
- filter for signals that are just barely perceptable 
+ done: filter for signals that are just barely perceptable 
  different marks for really strong signals - maybe arrows or hashes or something. 
  done: distinguish midnight sun point from midday sun point
  more precise time control, with time spinner 
