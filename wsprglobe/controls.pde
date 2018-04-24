@@ -24,6 +24,7 @@ boolButton colorDriftButton;
 boolButton showLegend;
 boolButton filter1;  /* to filter the data */ 
 boolButton filter2;  /* to filter the data even more */
+boolButton filter3;  /* to filter the data even more */
 
 boolean debugText = false; 
 
@@ -122,6 +123,10 @@ void setupControls()
   filter2.setNominalValue("Filter: Over 2000 km");
   filter2.setState(false);
 
+  filter3 = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
+  filter3.setNominalValue("Filter: 5 Edges per TX Node");
+  filter3.setState(false);
+  
   showLegend = new boolButton(buttonX, buttonY += yInc, buttonSize, buttonSize);
   showLegend.setNominalValue("Show Legend");
   showLegend.setState(false);
@@ -232,6 +237,9 @@ void updateControls()
     filter2.update(); 
     filter2.display();
 
+    filter3.update(); 
+    filter3.display();
+
     showLegend.update(); 
     showLegend.display();
 
@@ -271,6 +279,7 @@ void processPresets()
     observationWindow.setValue(0.2232);
     filter1.setState(true);
     filter2.setState(false);
+    filter3.setState(false);
     showLegend.setState(true);
   }
 
@@ -310,6 +319,7 @@ void processPresets()
     showLegend.setState(false);
     filter1.setState(false);
     filter2.setState(false);
+    filter3.setState(false);
     debugText = false;
   }
 

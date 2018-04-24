@@ -28,3 +28,6 @@ Earth image is from the "Texture Sphere" demo from Processing.org.
 
 ![screenshot 1](/screenshot1.png?raw=true "Screensot 1")
 
+Video overview: 
+[![video overview](https://img.youtube.com/vi/1hfoWJgqQ-4/0.jpg)](https://www.youtube.com/watch?v=1hfoWJgqQ-4)
+

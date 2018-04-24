@@ -390,8 +390,8 @@ void drawLegend() {
   
   int xinc = 20; 
   int yinc = 20; 
-  int current_y = height - (height / 3); 
-  int current_x = width - (width / 7);
+  int current_y = height - (int) ((float)height / 2.7);  /* These will need to change if you use different resolution */
+  int current_x = width - (width / 6);
   stroke (255, 192, 0);
   noFill(); 
   strokeWeight(1);
@@ -516,6 +516,11 @@ void drawLegend() {
   if ( filter2.getState() ) 
   { 
     text("Filter: Over 2000 km", current_x, current_y ); current_y+=yinc; 
+  }
+
+  if ( filter3.getState() ) 
+  { 
+    text("Filter: 5 Edges per TX Node", current_x, current_y ); current_y+=yinc; 
   }
 
 }

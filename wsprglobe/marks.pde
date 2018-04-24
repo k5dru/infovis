@@ -220,7 +220,7 @@ void loadMarks() {
     SQL = SQL + " and distance_km > 2000"; 
   }
   
-  if (true) { 
+  if (filter3.getState()) { 
     /* allow only 5 best edges per tx station per observation: */ 
     SQL = "select * from (select data.*, row_number() over (partition by observationtime, tx_call order by quality desc) as tx_rownum from ("
     + SQL 
