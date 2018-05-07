@@ -74,7 +74,8 @@ float prevKmPerPixel = kmPerPixel; /* to know when this has changed */
 
 void settings()
 { 
-  size(1280, 850, P3D);
+  // size(1280, 850, P3D);
+  size(1420, 870, P3D);
 }
 
 
@@ -510,7 +511,7 @@ void drawLegend() {
 
   if ( filter1.getState() ) 
   { 
-    text("Filter: High Quality Quartile", current_x, current_y ); current_y+=yinc; 
+    text("Filter: High Quality (Derived)", current_x, current_y ); current_y+=yinc; 
   }
 
   if ( filter2.getState() ) 

@@ -146,6 +146,8 @@ where
 distance_rank <= 5;
 
 
+/* are some staions over-represented? */
+select observationtime, tx_call, count(*) from wspr group by 1,2 having count(*) > 50 order by 3 desc, 2, 1;
 
 /* holy crow; some stations are being reported dozens or hundreds of times per observation. 
    Find a way to limit to the best obverstations by station: */ 
