@@ -27,7 +27,7 @@ is used to make Earth's coastlines visible.
 
 Earth image is from the "Texture Sphere" demo from Processing.org.
 
-Project [slide presentation]: (https://drive.google.com/open?id=1DpR6Kd-o3gusWcLmGyRGH8EfK-am7TrypX_Tpqof7zQ)
+Project [slide presentation](https://drive.google.com/open?id=1DpR6Kd-o3gusWcLmGyRGH8EfK-am7TrypX_Tpqof7zQ)
 
 ![screenshot 1](/screenshot1.png?raw=true "Screenshot 1")
 
